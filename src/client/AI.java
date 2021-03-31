@@ -1,6 +1,10 @@
 package client;
 
 
+import client.bfs.AdjList;
+import client.bfs.BfsHelper;
+import client.bfs.Graph;
+import client.bfs.UnweightedShortestPath;
 import client.model.Answer;
 import client.model.Cell;
 import client.model.enums.CellType;
@@ -28,29 +32,33 @@ public class AI {
     private static String message = "";
     private static Direction prevDirection = Direction.UP;
 
+    private static final AdjList graph = new AdjList(10000, false);
+
+    private int positionX;
+    private int positionY;
+    private int positionGraphName;
+
+    private int baseGraphName;
+
     public Answer turn(World world) {
         // Enter your AI code here
         AI.turn++;
         message = "";
 
-        //////////
-//        Cell locationCell = world.getAnt().getLocationCell();
-//        Cell neighborCell = world.getAnt().getNeighborCell(1, 1);
-//
-//        message += "-" + world.getAnt().getYCoordinate();
-//        if (neighborCell != null) message += "nCl!n/";
-//        if (locationCell != null) message += "lCl!n/";
-//        getAvailableDirections(world);
-//        return new Answer(getRandomDirection(), message, 10);
-        ///////////////
-
-
+        //Initialize
+        positionX = world.getAnt().getXCoordinate();
+        positionY = world.getAnt().getYCoordinate();
+        positionGraphName = Integer.parseInt(String.valueOf(positionX) + positionY);
+        baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
 
         Direction nextMoveDirection = getNextMoveDirection(world);
 
         message += "nD:" + nextMoveDirection + "/pD:" + prevDirection;
 
         prevDirection = nextMoveDirection;
+
+        new BfsHelper(graph).findShortestPath(positionGraphName, baseGraphName);
+        System.out.println();
 
         return new Answer(nextMoveDirection, message, 10);
     }
@@ -141,25 +149,50 @@ public class AI {
 
     private ArrayList<Direction> getAvailableDirections(World world) {
         ArrayList<Direction> availableDirections = new ArrayList<>();
+        String posGraphName = String.valueOf(world.getAnt().getXCoordinate()) + String.valueOf(world.getAnt().getYCoordinate());
 
         Cell up = world.getAnt().getNeighborCell(0, -1);
         Cell down = world.getAnt().getNeighborCell(0, 1);
         Cell right = world.getAnt().getNeighborCell(1, 0);
         Cell left = world.getAnt().getNeighborCell(-1, 0);
 
-        if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) availableDirections.add(Direction.UP);
-        if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) availableDirections.add(Direction.DOWN);
-        if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) availableDirections.add(Direction.RIGHT);
-        if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) availableDirections.add(Direction.LEFT);
+        if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) {
+            availableDirections.add(Direction.UP);
+            String upGraphName = String.valueOf(up.getXCoordinate()) + String.valueOf(up.getYCoordinate());
+            addEdgeToGraph(Integer.parseInt(upGraphName), Integer.parseInt(posGraphName));
+        }
+        if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) {
+            availableDirections.add(Direction.DOWN);
+            String downGraphName = String.valueOf(down.getXCoordinate()) + String.valueOf(down.getYCoordinate());
+            addEdgeToGraph(Integer.parseInt(downGraphName), Integer.parseInt(posGraphName));
+        }
+        if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) {
+            availableDirections.add(Direction.RIGHT);
+            String rightGraphName = String.valueOf(right.getXCoordinate()) + String.valueOf(right.getYCoordinate());
+            addEdgeToGraph(Integer.parseInt(rightGraphName), Integer.parseInt(posGraphName));
+        }
+        if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) {
+            availableDirections.add(Direction.LEFT);
+            String leftGraphName = String.valueOf(left.getXCoordinate()) + String.valueOf(left.getYCoordinate());
+            addEdgeToGraph(Integer.parseInt(leftGraphName), Integer.parseInt(posGraphName));
+        }
+
+        if (!graph.contains(Integer.parseInt(posGraphName))) graph.addNodeToHistory(Integer.parseInt(posGraphName));
 
         return availableDirections;
+    }
+
+    private void addEdgeToGraph(int src, int dest) {
+        if (!graph.contains(src)) {
+            graph.addEdge(src, dest);
+        }
     }
 
     private boolean isCellInMovingBounds(Cell cell, World world) {
         boolean isIn = Math.abs(cell.getXCoordinate() - world.getAnt().getXCoordinate()) +
                 Math.abs(cell.getYCoordinate() - world.getAnt().getYCoordinate()) <= 1;
 
-        System.out.println("isCinBound: Cell at:" + cell.getXCoordinate() + "," + cell.getYCoordinate() + "..." + isIn);
+//        System.out.println("isCinBound: Cell at:" + cell.getXCoordinate() + "," + cell.getYCoordinate() + "..." + isIn);
 
         return isIn;
     }

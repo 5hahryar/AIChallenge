@@ -12,6 +12,8 @@ public class AdjList implements Graph {
     final int nodeCount;
     final boolean directed;
 
+    private ArrayList<Integer> scannedNodes = new ArrayList<>();
+
     public AdjList(int n, boolean directed) {
         graphRep = new ArrayList<>(n);
         nodeCount = n;
@@ -76,5 +78,13 @@ public class AdjList implements Graph {
             }
             System.out.print("\n");
         }
+    }
+
+    public boolean contains(int src) {
+        return scannedNodes.contains(src);
+    }
+
+    public void addNodeToHistory(int src) {
+        scannedNodes.add(src);
     }
 }
