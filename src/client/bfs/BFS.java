@@ -1,5 +1,6 @@
 package client.bfs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -16,6 +17,9 @@ abstract class BFS {
     final int[] parent;
     final boolean[] discovered;
     final boolean[] processed;
+
+    //mycode
+    ArrayList<Integer> pathToDestination = new ArrayList<>();
 
     public BFS(final Graph graph) {
         this.graph = graph;
@@ -74,6 +78,7 @@ abstract class BFS {
         }
         printPath(parentNode);
         System.out.printf(" -> %d", destination);
+        pathToDestination.add(destination);
     }
 
     public void printParent() {
@@ -81,6 +86,10 @@ abstract class BFS {
         System.out.println("Parent array:");
         System.out.println(Arrays.toString(parent));
         System.out.println("----------------------------------");
+    }
+
+    public ArrayList<Integer> getPathToDestination() {
+        return pathToDestination;
     }
 
     abstract void processVertexEarly(int u);

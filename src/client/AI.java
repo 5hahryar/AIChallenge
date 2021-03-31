@@ -7,6 +7,7 @@ import client.bfs.Graph;
 import client.bfs.UnweightedShortestPath;
 import client.model.Answer;
 import client.model.Cell;
+import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
@@ -51,16 +52,58 @@ public class AI {
         positionGraphName = Integer.parseInt(String.valueOf(positionX) + positionY);
         baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
 
-        Direction nextMoveDirection = getNextMoveDirection(world);
+        Direction nextMoveDirection;
+
+        if (world.getAnt().getType() == AntType.KARGAR) nextMoveDirection = nextMoveDirectionKargar(world);
+        else nextMoveDirection = nextMoveDirectionSarbaaz(world);
 
         message += "nD:" + nextMoveDirection + "/pD:" + prevDirection;
 
         prevDirection = nextMoveDirection;
 
-        new BfsHelper(graph).findShortestPath(positionGraphName, baseGraphName);
+        BfsHelper bfs = new BfsHelper(graph);
+        bfs.findShortestPath(positionGraphName, baseGraphName);
+//        System.out.println("pppaaattthhh: " + bfs.getPathToDestination().toString());
+
         System.out.println();
 
         return new Answer(nextMoveDirection, message, 10);
+    }
+
+    private Direction nextMoveDirectionSarbaaz(World world) {
+        return getNextMoveDirection(world);
+    }
+
+    private Direction nextMoveDirectionKargar(World world) {
+        if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToHome(world);
+        else return getNextMoveDirection(world);
+    }
+
+    private Direction getDirectionToHome(World world) {
+        Cell up = world.getAnt().getNeighborCell(0, -1);
+        Cell down = world.getAnt().getNeighborCell(0, 1);
+        Cell right = world.getAnt().getNeighborCell(1, 0);
+        Cell left = world.getAnt().getNeighborCell(-1, 0);
+
+        int upGraphName = 0;
+        int downGraphName = 0;
+        int rightGraphName = 0;
+        int leftGraphName = 0;
+
+        if (up != null) upGraphName = Integer.parseInt(String.valueOf(up.getXCoordinate()) + String.valueOf(up.getYCoordinate()));
+        if (down != null) downGraphName = Integer.parseInt(String.valueOf(down.getXCoordinate()) + String.valueOf(down.getYCoordinate()));
+        if (right != null) rightGraphName = Integer.parseInt(String.valueOf(right.getXCoordinate()) + String.valueOf(right.getYCoordinate()));
+        if (left != null) leftGraphName = Integer.parseInt(String.valueOf(left.getXCoordinate()) + String.valueOf(left.getYCoordinate()));
+
+        BfsHelper bfs = new BfsHelper(graph);
+        bfs.findShortestPath(positionGraphName, baseGraphName);
+
+        if (up != null && upGraphName == bfs.getPathToDestination().get(0)) return Direction.UP;
+        if (down != null && downGraphName == bfs.getPathToDestination().get(0)) return Direction.DOWN;
+        if (right != null && rightGraphName == bfs.getPathToDestination().get(0)) return Direction.RIGHT;
+        if (left != null && leftGraphName == bfs.getPathToDestination().get(0)) return Direction.LEFT;
+
+        return Direction.CENTER;
     }
 
     private Direction getNextMoveDirection(World world) {
@@ -177,7 +220,7 @@ public class AI {
             addEdgeToGraph(Integer.parseInt(leftGraphName), Integer.parseInt(posGraphName));
         }
 
-        if (!graph.contains(Integer.parseInt(posGraphName))) graph.addNodeToHistory(Integer.parseInt(posGraphName));
+        if (!graph.contains(Integer.parseInt(posGraphName))) graph.addNodeToHistory(Integer.parseInt(posGraphName), positionX, positionY);
 
         return availableDirections;
     }

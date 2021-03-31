@@ -12,7 +12,7 @@ public class AdjList implements Graph {
     final int nodeCount;
     final boolean directed;
 
-    private ArrayList<Integer> scannedNodes = new ArrayList<>();
+    private ArrayList<MyNode> scannedNodes = new ArrayList<>();
 
     public AdjList(int n, boolean directed) {
         graphRep = new ArrayList<>(n);
@@ -81,10 +81,13 @@ public class AdjList implements Graph {
     }
 
     public boolean contains(int src) {
-        return scannedNodes.contains(src);
+        for (MyNode node : scannedNodes) {
+            if (node.getGraphName() == src) return true;
+        }
+        return false;
     }
 
-    public void addNodeToHistory(int src) {
-        scannedNodes.add(src);
+    public void addNodeToHistory(int src, int x, int y) {
+        scannedNodes.add(new MyNode(src, x, y));
     }
 }
