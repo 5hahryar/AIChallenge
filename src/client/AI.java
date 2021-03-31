@@ -71,7 +71,7 @@ public class AI {
     }
 
     private Direction nextMoveDirectionSarbaaz(World world) {
-        return getNextMoveDirection(world);
+        return Direction.CENTER;
     }
 
     private Direction nextMoveDirectionKargar(World world) {
@@ -107,14 +107,26 @@ public class AI {
     }
 
     private Direction getNextMoveDirection(World world) {
-        ArrayList<Direction> availableDirections = getAvailableDirections(world);
+        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
         Direction optimumDirection = findOptimumDirection(availableDirections);
         return optimumDirection;
     }
 
-    private Direction findOptimumDirection(ArrayList<Direction> availableDirections) {
-        if (availableDirections.contains(prevDirection)) return prevDirection;
-        else return availableDirections.get(new Random().nextInt(availableDirections.size()));
+    private Direction findOptimumDirection(ArrayList<MyDirection> availableDirections) {
+        availableDirections.sort(new Comparator<MyDirection>() {
+            @Override
+            public int compare(MyDirection o1, MyDirection o2) {
+                return Integer.compare(o2.getCell().getResource().getValue(), o1.getCell().getResource().getValue());
+            }
+        });
+
+        if (availableDirections.get(0).getCell().getResource().getValue() > 0) return availableDirections.get(0).getDirection();
+        else {
+            for (MyDirection direction : availableDirections) {
+                if (direction.getDirection() == prevDirection) return direction.getDirection();
+            }
+            return availableDirections.get(new Random().nextInt(availableDirections.size())).getDirection();
+        }
     }
 
     private Direction getDirectionToOptimumCell(World world, Cell optimumCell) {
@@ -190,8 +202,8 @@ public class AI {
         };
     }
 
-    private ArrayList<Direction> getAvailableDirections(World world) {
-        ArrayList<Direction> availableDirections = new ArrayList<>();
+    private ArrayList<MyDirection> getAvailableDirections(World world) {
+        ArrayList<MyDirection> availableDirections = new ArrayList<>();
         String posGraphName = String.valueOf(world.getAnt().getXCoordinate()) + String.valueOf(world.getAnt().getYCoordinate());
 
         Cell up = world.getAnt().getNeighborCell(0, -1);
@@ -200,22 +212,22 @@ public class AI {
         Cell left = world.getAnt().getNeighborCell(-1, 0);
 
         if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) {
-            availableDirections.add(Direction.UP);
+            availableDirections.add(new MyDirection(Direction.UP, up));
             String upGraphName = String.valueOf(up.getXCoordinate()) + String.valueOf(up.getYCoordinate());
             addEdgeToGraph(Integer.parseInt(upGraphName), Integer.parseInt(posGraphName));
         }
         if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) {
-            availableDirections.add(Direction.DOWN);
+            availableDirections.add(new MyDirection(Direction.DOWN, down));
             String downGraphName = String.valueOf(down.getXCoordinate()) + String.valueOf(down.getYCoordinate());
             addEdgeToGraph(Integer.parseInt(downGraphName), Integer.parseInt(posGraphName));
         }
         if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) {
-            availableDirections.add(Direction.RIGHT);
+            availableDirections.add(new MyDirection(Direction.RIGHT, right));
             String rightGraphName = String.valueOf(right.getXCoordinate()) + String.valueOf(right.getYCoordinate());
             addEdgeToGraph(Integer.parseInt(rightGraphName), Integer.parseInt(posGraphName));
         }
         if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) {
-            availableDirections.add(Direction.LEFT);
+            availableDirections.add(new MyDirection(Direction.LEFT, left));
             String leftGraphName = String.valueOf(left.getXCoordinate()) + String.valueOf(left.getYCoordinate());
             addEdgeToGraph(Integer.parseInt(leftGraphName), Integer.parseInt(posGraphName));
         }
