@@ -6,9 +6,7 @@ import client.model.Cell;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
-import java.io.Console;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -28,6 +26,7 @@ public class AI {
      */
     static int turn = 0;
     private static String message = "";
+    private static Direction prevDirection = Direction.UP;
 
     public Answer turn(World world) {
         // Enter your AI code here
@@ -49,13 +48,22 @@ public class AI {
 
         Direction nextMoveDirection = getNextMoveDirection(world);
 
+        message += "nD:" + nextMoveDirection + "/pD:" + prevDirection;
+
+        prevDirection = nextMoveDirection;
+
         return new Answer(nextMoveDirection, message, 10);
     }
 
     private Direction getNextMoveDirection(World world) {
-        ArrayList<Cell> availableDirections = getAvailableDirections(world);
-        Cell optimumCell = findOptimumCell(availableDirections);
-        return getDirectionToOptimumCell(world, optimumCell);
+        ArrayList<Direction> availableDirections = getAvailableDirections(world);
+        Direction optimumDirection = findOptimumDirection(availableDirections);
+        return optimumDirection;
+    }
+
+    private Direction findOptimumDirection(ArrayList<Direction> availableDirections) {
+        if (availableDirections.contains(prevDirection)) return prevDirection;
+        else return availableDirections.get(new Random().nextInt(availableDirections.size()));
     }
 
     private Direction getDirectionToOptimumCell(World world, Cell optimumCell) {
@@ -131,18 +139,29 @@ public class AI {
         };
     }
 
-    private ArrayList<Cell> getAvailableDirections(World world) {
-        ArrayList<Cell> availableCells = new ArrayList<>();
-        int viewDistance = world.getAnt().getViewDistance();
-        for (int i = 0; i <= ((viewDistance*2)*viewDistance); i++) {
-            for (int j = 0; j <= ((viewDistance*2)*viewDistance); j++) {
-                Cell neighborCell = world.getAnt().getNeighborCell(i, j);
-                if (neighborCell != null && neighborCell.getType() != CellType.WALL) {
-                    availableCells.add(neighborCell);
-                }
-            }
-        }
-        return availableCells;
+    private ArrayList<Direction> getAvailableDirections(World world) {
+        ArrayList<Direction> availableDirections = new ArrayList<>();
+
+        Cell up = world.getAnt().getNeighborCell(0, -1);
+        Cell down = world.getAnt().getNeighborCell(0, 1);
+        Cell right = world.getAnt().getNeighborCell(1, 0);
+        Cell left = world.getAnt().getNeighborCell(-1, 0);
+
+        if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) availableDirections.add(Direction.UP);
+        if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) availableDirections.add(Direction.DOWN);
+        if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) availableDirections.add(Direction.RIGHT);
+        if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) availableDirections.add(Direction.LEFT);
+
+        return availableDirections;
+    }
+
+    private boolean isCellInMovingBounds(Cell cell, World world) {
+        boolean isIn = Math.abs(cell.getXCoordinate() - world.getAnt().getXCoordinate()) +
+                Math.abs(cell.getYCoordinate() - world.getAnt().getYCoordinate()) <= 1;
+
+        System.out.println("isCinBound: Cell at:" + cell.getXCoordinate() + "," + cell.getYCoordinate() + "..." + isIn);
+
+        return isIn;
     }
 
     private Cell findOptimumCell(ArrayList<Cell> cells) {
