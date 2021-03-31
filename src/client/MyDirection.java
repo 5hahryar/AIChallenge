@@ -3,7 +3,7 @@ package client;
 import client.model.Cell;
 import client.model.enums.Direction;
 
-public class MyDirection implements Comparable<MyDirection>{
+public class MyDirection{
 
     private Direction direction;
     private int weight;
@@ -44,8 +44,4 @@ public class MyDirection implements Comparable<MyDirection>{
         this.cell = cell;
     }
 
-    @Override
-    public int compareTo(MyDirection o) {
-        return 0;
-    }
 }
