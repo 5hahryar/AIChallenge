@@ -34,6 +34,7 @@ public class MyKargar {
         positionGraphName = Integer.parseInt(String.valueOf(positionX) + positionY);
         baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
 
+        //if current cell has no resource remove it from nodesWithResource
         if (nodesWithResources.contains(getNodeNameFromCell(world.getAnt().getLocationCell()))
                 && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
             nodesWithResources.remove(((Object)getNodeNameFromCell(world.getAnt().getLocationCell())));
@@ -137,7 +138,6 @@ public class MyKargar {
                 nodesWithResources.remove(getNodeNameFromCell(dir.getCell()));
             }
         }
-
 
         //if there are no directions with resources, take the previous direction if available, if not pick one randomly
         if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
