@@ -109,6 +109,7 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
+        mapViewDistance(world);
         if (!nodesWithResources.isEmpty()) {
             return getDirectionToNode(world, nodesWithResources.get(0));
         }
@@ -118,6 +119,55 @@ public class MyKargar {
             return optimumDirection;
         }
     }
+
+    private void mapViewDistance(World world) {
+        ArrayList<Cell> neighborCells = new ArrayList<>();
+
+        for (int i=0;i<=world.getAnt().getViewDistance();i++) {
+            for (int j=0;j<=world.getAnt().getViewDistance();j++) {
+                Cell neighbor = world.getAnt().getNeighborCell(i, j);
+                if (neighbor != null && neighbor.getType() != CellType.WALL) neighborCells.add(neighbor);
+            }
+        }
+
+        for (Cell neighbor : neighborCells) {
+            int upX = neighbor.getXCoordinate();
+            int upY = neighbor.getYCoordinate() - 1;
+            int doX = neighbor.getXCoordinate();
+            int doY = neighbor.getYCoordinate() + 1;
+            int riX = neighbor.getXCoordinate() + 1;
+            int riY = neighbor.getYCoordinate();
+            int leX = neighbor.getXCoordinate() -1;
+            int leY = neighbor.getYCoordinate();
+
+            for (Cell relative : neighborCells) {
+                if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
+                    if (relative.getType() != CellType.WALL) {
+                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
+                    }
+                }
+                else if (relative.getXCoordinate() == doX && relative.getYCoordinate() == doY){
+                    if (relative.getType() != CellType.WALL) {
+                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
+                    }
+                }
+                else if (relative.getXCoordinate() == riX && relative.getYCoordinate() == riY){
+                    if (relative.getType() != CellType.WALL) {
+                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
+                    }
+                }
+                else if (relative.getXCoordinate() == leX && relative.getYCoordinate() == leY){
+                    if (relative.getType() != CellType.WALL) {
+                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+                    }
+                }
+            }
+        }
+    }
+
 
     /**
      * @param availableDirections
