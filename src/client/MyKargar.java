@@ -24,8 +24,8 @@ public class MyKargar {
     private int positionX;
     private int positionY;
     private int positionGraphName;
-
     private int baseGraphName;
+    private ArrayList<Integer> nodesWithResources = new ArrayList<>();
 
     public Answer turn(World world) {
         //Initialize values
@@ -34,10 +34,20 @@ public class MyKargar {
         positionGraphName = Integer.parseInt(String.valueOf(positionX) + positionY);
         baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
 
+        if (nodesWithResources.contains(getNodeNameFromCell(world.getAnt().getLocationCell()))
+                && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
+            nodesWithResources.remove(((Object)getNodeNameFromCell(world.getAnt().getLocationCell())));
+            System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
+        }
+
+        System.out.println("currently at: " + positionX + "," + positionY);
+
         Direction nextMoveDirection;
         nextMoveDirection = nextMoveDirectionKargar(world);
 
-        message += "nD:" + nextMoveDirection + "/pD:" + prevDirection;
+        message += "nodeWithRes:" + nodesWithResources.size();
+
+        System.out.println("nodeswithres:" + nodesWithResources.toString());
 
         prevDirection = nextMoveDirection;
 
@@ -50,7 +60,7 @@ public class MyKargar {
      */
     private Direction nextMoveDirectionKargar(World world) {
         //return to base if ant holds resources ELSE get another direction
-        if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToHome(world);
+        if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
         else return getNextMoveDirection(world);
     }
 
@@ -58,7 +68,7 @@ public class MyKargar {
      * @param world
      * @return next direction in order to go to base
      */
-    private Direction getDirectionToHome(World world) {
+    private Direction getDirectionToNode(World world, int nodeName) {
         //get cell info of 4 main directions
         Cell up = world.getAnt().getNeighborCell(0, -1);
         Cell down = world.getAnt().getNeighborCell(0, 1);
@@ -79,13 +89,15 @@ public class MyKargar {
 
         //initialize BFS algorithm to find the shortest path
         BfsHelper bfs = new BfsHelper(graph);
-        bfs.findShortestPath(positionGraphName, baseGraphName);
+        bfs.findShortestPath(positionGraphName, nodeName);
 
         //match the shortest path from BFS to correct direction
-        if (up != null && upGraphName == bfs.getPathToDestination().get(0)) return Direction.UP;
-        if (down != null && downGraphName == bfs.getPathToDestination().get(0)) return Direction.DOWN;
-        if (right != null && rightGraphName == bfs.getPathToDestination().get(0)) return Direction.RIGHT;
-        if (left != null && leftGraphName == bfs.getPathToDestination().get(0)) return Direction.LEFT;
+        if (bfs.getPathToDestination().size() > 0) {
+            if (up != null && upGraphName == bfs.getPathToDestination().get(0)) return Direction.UP;
+            if (down != null && downGraphName == bfs.getPathToDestination().get(0)) return Direction.DOWN;
+            if (right != null && rightGraphName == bfs.getPathToDestination().get(0)) return Direction.RIGHT;
+            if (left != null && leftGraphName == bfs.getPathToDestination().get(0)) return Direction.LEFT;
+        }
 
         //return center if non is matched to BFS
         return Direction.CENTER;
@@ -96,16 +108,21 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-        Direction optimumDirection = findOptimumDirection(availableDirections);
-        return optimumDirection;
+        if (!nodesWithResources.isEmpty()) {
+            return getDirectionToNode(world, nodesWithResources.get(0));
+        }
+        else {
+            ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
+            Direction optimumDirection = findOptimumDirection(availableDirections, world);
+            return optimumDirection;
+        }
     }
 
     /**
      * @param availableDirections
      * @return next optimum direction to move
      */
-    private Direction findOptimumDirection(ArrayList<MyDirection> availableDirections) {
+    private Direction findOptimumDirection(ArrayList<MyDirection> availableDirections, World world) {
         //sort available directions based on their resource value MAX .... MIN
         availableDirections.sort(new Comparator<>() {
             @Override
@@ -114,8 +131,20 @@ public class MyKargar {
             }
         });
 
+        //if direction exists in nodesWithResources but has no resource remove it from list
+        for (MyDirection dir : availableDirections) {
+            if (nodesWithResources.contains(getNodeNameFromCell(dir.getCell())) && dir.getCell().getResource().getValue() <= 0) {
+                nodesWithResources.remove(getNodeNameFromCell(dir.getCell()));
+            }
+        }
+
+
         //if there are no directions with resources, take the previous direction if available, if not pick one randomly
-        if (availableDirections.get(0).getCell().getResource().getValue() > 0) return availableDirections.get(0).getDirection();
+        if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
+            //add node to list of nodes with resources
+            nodesWithResources.add(getNodeNameFromCell(availableDirections.get(0).getCell()));
+            return availableDirections.get(0).getDirection();
+        }
         else {
             for (MyDirection direction : availableDirections) {
                 if (direction.getDirection() == prevDirection) return direction.getDirection();
@@ -186,5 +215,13 @@ public class MyKargar {
     private boolean isCellInMovingBounds(Cell cell, World world) {
         return Math.abs(cell.getXCoordinate() - world.getAnt().getXCoordinate()) +
                 Math.abs(cell.getYCoordinate() - world.getAnt().getYCoordinate()) <= 1;
+    }
+
+    private int getNodeNameFromCoordinates(int x, int y) {
+        return Integer.parseInt(String.valueOf(x) + String.valueOf(x));
+    }
+
+    private int getNodeNameFromCell(Cell cell) {
+        return Integer.parseInt(String.valueOf(cell.getXCoordinate()) + String.valueOf(cell.getYCoordinate()));
     }
 }

@@ -41,7 +41,11 @@ public class AI {
 
         //get next direction for unit based on it's type
         Direction nextMoveDirection;
-        if (world.getAnt().getType() == AntType.KARGAR) return myKargar.turn(world);
+        if (world.getAnt().getType() == AntType.KARGAR) {
+            System.out.println("turn:" + turn);
+            System.out.println("*******");
+            return myKargar.turn(world);
+        }
         else nextMoveDirection = nextMoveDirectionSarbaaz(world);
 
 
