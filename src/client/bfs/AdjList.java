@@ -12,6 +12,7 @@ public class AdjList implements Graph {
     final int nodeCount;
     final boolean directed;
 
+    //nodes that the path to their 4 main neighbors are added to edges
     private ArrayList<MyNode> scannedNodes = new ArrayList<>();
 
     public AdjList(int n, boolean directed) {

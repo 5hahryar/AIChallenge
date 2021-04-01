@@ -190,7 +190,7 @@ public class MyKargar {
         }
 
         //add position name to graph history
-        if (!graph.contains(positionGraphName)) graph.addNodeToHistory(positionGraphName, positionX, positionY);
+//        if (!graph.contains(positionGraphName)) graph.addNodeToHistory(positionGraphName, positionX, positionY);
 
         return availableDirections;
     }
@@ -201,9 +201,9 @@ public class MyKargar {
      * adds edge from src to dest
      */
     private void addEdgeToGraph(int src, int dest) {
-        if (!graph.contains(src)) {
+//        if (!graph.contains(src)) {
             graph.addEdge(src, dest);
-        }
+//        }
     }
 
     /**
