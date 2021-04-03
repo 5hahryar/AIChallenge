@@ -126,7 +126,10 @@ public class MyKargar {
         for (int i=0;i<=world.getAnt().getViewDistance();i++) {
             for (int j=0;j<=world.getAnt().getViewDistance();j++) {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
-                if (neighbor != null && neighbor.getType() != CellType.WALL) neighborCells.add(neighbor);
+                if (neighbor != null && neighbor.getType() != CellType.WALL) {
+                    neighborCells.add(neighbor);
+                    if (neighbor.getResource().getValue() > 0) nodesWithResources.add(getNodeNameFromCell(neighbor));
+                }
             }
         }
 
