@@ -73,11 +73,11 @@ abstract class BFS {
     public void printPath(final int destination) {
         final int parentNode = parent[destination];
         if (parentNode == -1) {
-//            System.out.printf("Head: %d", destination);
+            System.out.printf("Head: %d", destination);
             return;
         }
         printPath(parentNode);
-//        System.out.printf(" -> %d", destination);
+        System.out.printf(" -> %d", destination);
         pathToDestination.add(destination);
     }
 

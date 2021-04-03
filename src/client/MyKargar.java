@@ -2,6 +2,7 @@ package client;
 
 import client.bfs.AdjList;
 import client.bfs.BfsHelper;
+import client.bfs.MyNode;
 import client.model.Answer;
 import client.model.Cell;
 import client.model.enums.CellType;
@@ -25,7 +26,7 @@ public class MyKargar {
     private int positionY;
     private int positionGraphName;
     private int baseGraphName;
-    private ArrayList<Integer> nodesWithResources = new ArrayList<>();
+    private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
 
     public Answer turn(World world) {
         //Initialize values
@@ -48,10 +49,16 @@ public class MyKargar {
 
         message += "nodeWithRes:" + nodesWithResources.size();
 
-        System.out.println("nodeswithres:" + nodesWithResources.toString());
+//        System.out.println("nodeswithres:" + nodesWithResources.toString());
+
+        System.out.println("nodes with res:");
+        for (MyNode node: nodesWithResources) {
+            System.out.print(node.getGraphName() + "/");
+        }
 
         prevDirection = nextMoveDirection;
 
+        System.out.println("direction" + nextMoveDirection);
         return new Answer(nextMoveDirection, message, 10);
     }
 
@@ -60,9 +67,25 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
+        mapViewDistance(world);
+        sortMap(world);
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
         else return getNextMoveDirection(world);
+    }
+
+    private void sortMap(World world) {
+        if (nodesWithResources != null && nodesWithResources.size() > 1) {
+            nodesWithResources.sort(new Comparator<MyNode>() {
+                @Override
+                public int compare(MyNode o1, MyNode o2) {
+                    int o2Distance = Math.abs(positionX-o2.getX()) + Math.abs(positionY-o2.getY());
+                    int o1Distance = Math.abs(positionX-o1.getX()) + Math.abs(positionY-o1.getY());
+
+                    return Integer.compare(o1Distance, o2Distance);
+                }
+            });
+        }
     }
 
     /**
@@ -109,9 +132,9 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-        mapViewDistance(world);
+
         if (!nodesWithResources.isEmpty()) {
-            return getDirectionToNode(world, nodesWithResources.get(0));
+            return getDirectionToNode(world, nodesWithResources.get(0).getGraphName());
         }
         else {
             ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
@@ -122,14 +145,23 @@ public class MyKargar {
 
     private void mapViewDistance(World world) {
         ArrayList<Cell> neighborCells = new ArrayList<>();
+        int viewDistance = world.getAnt().getViewDistance();
 
-        for (int i=0;i<=world.getAnt().getViewDistance();i++) {
-            for (int j=0;j<=world.getAnt().getViewDistance();j++) {
+        for (int i=-viewDistance;i<=viewDistance;i++) {
+            for (int j=-viewDistance;j<=world.getAnt().getViewDistance();j++) {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
-                    if (neighbor.getResource().getValue() > 0) nodesWithResources.add(getNodeNameFromCell(neighbor));
+                    if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
+                        nodesWithResources.add(new MyNode(getNodeNameFromCell(neighbor), neighbor));
+                    }
                 }
+            }
+        }
+
+        for (Cell cell : neighborCells) {
+            if (cell.getResource().getValue() < 1 && nodesWithResourcesContains(getNodeNameFromCell(cell))) {
+                nodesWithResources.removeIf(node -> node.getGraphName() == getNodeNameFromCell(cell));
             }
         }
 
@@ -147,19 +179,16 @@ public class MyKargar {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
-//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
                     }
                 }
                 else if (relative.getXCoordinate() == doX && relative.getYCoordinate() == doY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
-//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
                     }
                 }
                 else if (relative.getXCoordinate() == riX && relative.getYCoordinate() == riY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
-//                        graph.addNodeToHistory(getNodeNameFromCell(neighbor), neighbor.getXCoordinate(), neighbor.getYCoordinate());
                     }
                 }
                 else if (relative.getXCoordinate() == leX && relative.getYCoordinate() == leY){
@@ -185,17 +214,12 @@ public class MyKargar {
             }
         });
 
-        //if direction exists in nodesWithResources but has no resource remove it from list
-        for (MyDirection dir : availableDirections) {
-            if (nodesWithResources.contains(getNodeNameFromCell(dir.getCell())) && dir.getCell().getResource().getValue() <= 0) {
-                nodesWithResources.remove(getNodeNameFromCell(dir.getCell()));
-            }
-        }
-
         //if there are no directions with resources, take the previous direction if available, if not pick one randomly
         if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
             //add node to list of nodes with resources
-            nodesWithResources.add(getNodeNameFromCell(availableDirections.get(0).getCell()));
+            if (!nodesWithResourcesContains(getNodeNameFromCell(availableDirections.get(0).getCell()))) {
+                nodesWithResources.add(new MyNode(getNodeNameFromCell(availableDirections.get(0).getCell()), availableDirections.get(0).getCell()));
+            }
             return availableDirections.get(0).getDirection();
         }
         else {
@@ -204,6 +228,13 @@ public class MyKargar {
             }
             return availableDirections.get(new Random().nextInt(availableDirections.size())).getDirection();
         }
+    }
+
+    private boolean nodesWithResourcesContains(int nodeNameFromCell) {
+        for (MyNode node : nodesWithResources) {
+            if (node.getGraphName() == nodeNameFromCell) return true;
+        }
+        return false;
     }
 
     /**

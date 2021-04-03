@@ -1,6 +1,13 @@
 package client.bfs;
 
+import client.model.Cell;
+
 public class MyNode {
+
+    private int graphName;
+    private int x;
+    private int y;
+    private int resourceValue;
 
     public MyNode(int graphName, int x, int y) {
         this.graphName = graphName;
@@ -8,9 +15,20 @@ public class MyNode {
         this.y = y;
     }
 
-    private int graphName;
-    private int x;
-    private int y;
+    public MyNode(int graphName, Cell cell) {
+        this.graphName = graphName;
+        this.x = cell.getXCoordinate();
+        this.y = cell.getYCoordinate();
+        this.resourceValue = cell.getResource().getValue();
+    }
+
+    public int getResourceValue() {
+        return resourceValue;
+    }
+
+    public void setResourceValue(int resourceValue) {
+        this.resourceValue = resourceValue;
+    }
 
     public int getGraphName() {
         return graphName;
