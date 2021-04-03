@@ -74,6 +74,10 @@ public class MyKargar {
         else return getNextMoveDirection(world);
     }
 
+    /**
+     * sort the list of nodes with resources, by their distance to current position MIN...MAX
+     * @param world
+     */
     private void sortMap(World world) {
         if (nodesWithResources != null && nodesWithResources.size() > 1) {
             nodesWithResources.sort(new Comparator<MyNode>() {
@@ -132,7 +136,7 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-
+        //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             return getDirectionToNode(world, nodesWithResources.get(0).getGraphName());
         }
@@ -143,15 +147,21 @@ public class MyKargar {
         }
     }
 
+    /**
+     * scans the viewable neighbors and maps them into graph
+     * @param world
+     */
     private void mapViewDistance(World world) {
         ArrayList<Cell> neighborCells = new ArrayList<>();
         int viewDistance = world.getAnt().getViewDistance();
 
+        //get neighbor cells in view distance
         for (int i=-viewDistance;i<=viewDistance;i++) {
             for (int j=-viewDistance;j<=world.getAnt().getViewDistance();j++) {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    //add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(getNodeNameFromCell(neighbor), neighbor));
                     }
@@ -159,12 +169,14 @@ public class MyKargar {
             }
         }
 
+        //remove node from nodesWithResources if it's resource value is below 1
         for (Cell cell : neighborCells) {
             if (cell.getResource().getValue() < 1 && nodesWithResourcesContains(getNodeNameFromCell(cell))) {
                 nodesWithResources.removeIf(node -> node.getGraphName() == getNodeNameFromCell(cell));
             }
         }
 
+        //get relatives of each neighbor and add their edges to graph
         for (Cell neighbor : neighborCells) {
             int upX = neighbor.getXCoordinate();
             int upY = neighbor.getYCoordinate() - 1;
@@ -175,6 +187,7 @@ public class MyKargar {
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
 
+            //find the up,down,right.left neighbor cells and add edge from neighbor to them, into the graph
             for (Cell relative : neighborCells) {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
                     if (relative.getType() != CellType.WALL) {
@@ -273,9 +286,6 @@ public class MyKargar {
             addEdgeToGraph(Integer.parseInt(leftGraphName), positionGraphName);
         }
 
-        //add position name to graph history
-//        if (!graph.contains(positionGraphName)) graph.addNodeToHistory(positionGraphName, positionX, positionY);
-
         return availableDirections;
     }
 
@@ -285,9 +295,7 @@ public class MyKargar {
      * adds edge from src to dest
      */
     private void addEdgeToGraph(int src, int dest) {
-//        if (!graph.contains(src)) {
             graph.addEdge(src, dest);
-//        }
     }
 
     /**
