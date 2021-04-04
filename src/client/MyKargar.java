@@ -51,7 +51,7 @@ public class MyKargar {
         Direction nextMoveDirection;
         nextMoveDirection = nextMoveDirectionKargar(world);
 
-        broadcastResources();
+//        broadcastResources();
 
 //        System.out.println("nodeswithres:" + nodesWithResources.toString());
         System.out.println("");
@@ -60,7 +60,7 @@ public class MyKargar {
             System.out.print(node.getGraphName() + "/");
         }
         if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
-
+        if (turn == 90) graph.printGraph();
 
         prevDirection = nextMoveDirection;
 
@@ -143,10 +143,10 @@ public class MyKargar {
         int leftGraphName = -1;
 
         //populate node names in format: XXYY
-        if (up != null) upGraphName = Integer.parseInt(String.valueOf(up.getXCoordinate()) + String.valueOf(up.getYCoordinate()));
-        if (down != null) downGraphName = Integer.parseInt(String.valueOf(down.getXCoordinate()) + String.valueOf(down.getYCoordinate()));
-        if (right != null) rightGraphName = Integer.parseInt(String.valueOf(right.getXCoordinate()) + String.valueOf(right.getYCoordinate()));
-        if (left != null) leftGraphName = Integer.parseInt(String.valueOf(left.getXCoordinate()) + String.valueOf(left.getYCoordinate()));
+        if (up != null) upGraphName = getNodeNameFromCell(up);
+        if (down != null) downGraphName = getNodeNameFromCell(down);
+        if (right != null) rightGraphName = getNodeNameFromCell(right);
+        if (left != null) leftGraphName = getNodeNameFromCell(left);
 
         //initialize BFS algorithm to find the shortest path
         BfsHelper bfs = new BfsHelper(graph);
@@ -308,23 +308,19 @@ public class MyKargar {
         //then add to list of available directions and the graph
         if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) {
             availableDirections.add(new MyDirection(Direction.UP, up));
-            String upGraphName = String.valueOf(up.getXCoordinate()) + String.valueOf(up.getYCoordinate());
-            addEdgeToGraph(Integer.parseInt(upGraphName), positionGraphName);
+            addEdgeToGraph(getNodeNameFromCell(up), positionGraphName);
         }
         if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) {
             availableDirections.add(new MyDirection(Direction.DOWN, down));
-            String downGraphName = String.valueOf(down.getXCoordinate()) + String.valueOf(down.getYCoordinate());
-            addEdgeToGraph(Integer.parseInt(downGraphName), positionGraphName);
+            addEdgeToGraph(getNodeNameFromCell(down), positionGraphName);
         }
         if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) {
             availableDirections.add(new MyDirection(Direction.RIGHT, right));
-            String rightGraphName = String.valueOf(right.getXCoordinate()) + String.valueOf(right.getYCoordinate());
-            addEdgeToGraph(Integer.parseInt(rightGraphName), positionGraphName);
+            addEdgeToGraph(getNodeNameFromCell(right), positionGraphName);
         }
         if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) {
             availableDirections.add(new MyDirection(Direction.LEFT, left));
-            String leftGraphName = String.valueOf(left.getXCoordinate()) + String.valueOf(left.getYCoordinate());
-            addEdgeToGraph(Integer.parseInt(leftGraphName), positionGraphName);
+            addEdgeToGraph(getNodeNameFromCell(left), positionGraphName);
         }
 
         return availableDirections;
