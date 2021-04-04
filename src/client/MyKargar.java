@@ -27,6 +27,7 @@ public class MyKargar {
     private int positionGraphName;
     private int baseGraphName;
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
+    private MyNode targetNode;
 
     public Answer turn(World world) {
         //Initialize values
@@ -138,7 +139,12 @@ public class MyKargar {
     private Direction getNextMoveDirection(World world) {
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
-            return getDirectionToNode(world, nodesWithResources.get(0).getGraphName());
+            //choose a target randomly, and null it if in base
+            if (positionX ==world.getBaseX() && positionY == world.getBaseY()) {
+                targetNode = null;
+            }
+            if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
+            return getDirectionToNode(world, targetNode.getGraphName());
         }
         else {
             ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
