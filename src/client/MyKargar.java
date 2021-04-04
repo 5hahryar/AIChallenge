@@ -40,10 +40,14 @@ public class MyKargar {
         baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
 
         //if current cell has no resource remove it from nodesWithResource
-        if (nodesWithResources.contains(getNodeNameFromCell(world.getAnt().getLocationCell()))
+        if (nodesWithResourcesContains(getNodeNameFromCell(world.getAnt().getLocationCell()))
                 && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
-            nodesWithResources.remove(((Object)getNodeNameFromCell(world.getAnt().getLocationCell())));
-            System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
+            for (MyNode node : nodesWithResources) {
+                if (node.getGraphName() == getNodeNameFromCell(world.getAnt().getLocationCell())) {
+                    nodesWithResources.remove(node);
+                    System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
+                }
+            }
         }
 
         System.out.println("currently at: " + positionX + "," + positionY);
@@ -179,13 +183,11 @@ public class MyKargar {
             //null target if we are in it
             if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
             //TODO:check targetNode not null and remove else below
-            return getDirectionToNode(world, targetNode.getGraphName());
+            if (targetNode != null) return getDirectionToNode(world, targetNode.getGraphName());
         }
-        else {
-            ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-            Direction optimumDirection = findOptimumDirection(availableDirections, world);
-            return optimumDirection;
-        }
+        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
+        Direction optimumDirection = findOptimumDirection(availableDirections, world);
+        return optimumDirection;
     }
 
     /**
