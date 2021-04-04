@@ -44,7 +44,7 @@ public class AI {
         if (world.getAnt().getType() == AntType.KARGAR) {
             System.out.println("turn:" + turn);
             System.out.println("*******");
-            return myKargar.turn(world);
+            return myKargar.turn(world, turn);
         }
         else nextMoveDirection = nextMoveDirectionSarbaaz(world);
 
