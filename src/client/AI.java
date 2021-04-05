@@ -60,13 +60,5 @@ public class AI {
         return Direction.CENTER;
     }
 
-    private Direction getRandomDirection() {
-        return switch (new Random().nextInt(4)) {
-            case 0 -> Direction.UP;
-            case 1 -> Direction.DOWN;
-            case 2 -> Direction.RIGHT;
-            case 3 -> Direction.LEFT;
-            default -> Direction.CENTER;
-        };
-    }
+
 }

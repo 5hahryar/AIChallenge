@@ -36,19 +36,19 @@ public class MyKargar {
         this.turn = turn;
         positionX = world.getAnt().getXCoordinate();
         positionY = world.getAnt().getYCoordinate();
-        positionGraphName = Integer.parseInt(String.valueOf(positionX) + positionY);
-        baseGraphName = Integer.parseInt(String.valueOf(world.getBaseX()) + world.getBaseY());
+        positionGraphName = getNodeNameFromCell(world.getAnt().getLocationCell());
+        baseGraphName = getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
 
         //if current cell has no resource remove it from nodesWithResource
-        if (nodesWithResourcesContains(getNodeNameFromCell(world.getAnt().getLocationCell()))
-                && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
-            for (MyNode node : nodesWithResources) {
-                if (node.getGraphName() == getNodeNameFromCell(world.getAnt().getLocationCell())) {
-                    nodesWithResources.remove(node);
-                    System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
-                }
-            }
-        }
+//        if (nodesWithResourcesContains(getNodeNameFromCell(world.getAnt().getLocationCell()))
+//                && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
+//            for (MyNode node : nodesWithResources) {
+//                if (node.getGraphName() == getNodeNameFromCell(world.getAnt().getLocationCell())) {
+//                    nodesWithResources.remove(node);
+//                    System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
+//                }
+//            }
+//        }
 
         System.out.println("currently at: " + positionX + "," + positionY);
 
@@ -64,7 +64,7 @@ public class MyKargar {
             System.out.print(node.getGraphName() + "/");
         }
         if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
-        if (turn == 90) graph.printGraph();
+        System.out.println("pos name : " + getNodeNameFromCell(world.getAnt().getLocationCell()));
 
         prevDirection = nextMoveDirection;
 
@@ -165,7 +165,7 @@ public class MyKargar {
         }
 
         //return center if non is matched to BFS
-        return Direction.CENTER;
+        return getRandomDirection();
     }
 
     /**
@@ -208,16 +208,15 @@ public class MyKargar {
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(getNodeNameFromCell(neighbor), neighbor));
                     }
+                    //remove node from nodesWithResources if it's resource value is below 1
+                    else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
+                        nodesWithResources.removeIf(node -> node.getGraphName() == getNodeNameFromCell(neighbor));
+                    }
                 }
             }
         }
 
-        //remove node from nodesWithResources if it's resource value is below 1
-        for (Cell cell : neighborCells) {
-            if (cell.getResource().getValue() < 1 && nodesWithResourcesContains(getNodeNameFromCell(cell))) {
-                nodesWithResources.removeIf(node -> node.getGraphName() == getNodeNameFromCell(cell));
-            }
-        }
+
 
         //get relatives of each neighbor and add their edges to graph
         for (Cell neighbor : neighborCells) {
@@ -335,6 +334,7 @@ public class MyKargar {
      */
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
+//            System.out.println("edge added : " + src + ">" +dest);
     }
 
     /**
@@ -349,10 +349,28 @@ public class MyKargar {
     }
 
     private int getNodeNameFromCoordinates(int x, int y) {
-        return Integer.parseInt(String.valueOf(x) + String.valueOf(x));
+        int a = x;
+        int b = y;
+        int value = (a + b) * (a + b + 1) / 2 + b;
+
+        return value;
     }
 
     private int getNodeNameFromCell(Cell cell) {
-        return Integer.parseInt(String.valueOf(cell.getXCoordinate()) + String.valueOf(cell.getYCoordinate()));
+        int a = cell.getXCoordinate();
+        int b = cell.getYCoordinate();
+        int value = (a + b) * (a + b + 1) / 2 + b;
+
+        return value;
+    }
+
+    private Direction getRandomDirection() {
+        return switch (new Random().nextInt(4)) {
+            case 0 -> Direction.UP;
+            case 1 -> Direction.DOWN;
+            case 2 -> Direction.RIGHT;
+            case 3 -> Direction.LEFT;
+            default -> Direction.CENTER;
+        };
     }
 }
