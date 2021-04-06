@@ -1,5 +1,6 @@
-package client;
+package client.myClasses;
 
+import client.World;
 import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
@@ -33,8 +34,8 @@ public class MyKargar {
         this.turn = turn;
         positionX = world.getAnt().getXCoordinate();
         positionY = world.getAnt().getYCoordinate();
-        positionGraphName = getNodeNameFromCell(world.getAnt().getLocationCell());
-        baseGraphName = getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
+        positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
+        baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         message = "";
 //        if (prevDirection == null) prevDirection = getRandomDirection();
 
@@ -53,7 +54,7 @@ public class MyKargar {
             System.out.print(node.getGraphName() + "/");
         }
         if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
-        System.out.println("pos name : " + getNodeNameFromCell(world.getAnt().getLocationCell()));
+        System.out.println("pos name : " + Utils.getNodeNameFromCell(world.getAnt().getLocationCell()));
 
         prevDirection = nextMoveDirection;
 
@@ -63,9 +64,9 @@ public class MyKargar {
     }
 
     private void broadcastMap() {
-        LinkedList<Integer> edges = graph.getEdges(getNodeNameFromCoordinates(positionX, positionY));
+        LinkedList<Integer> edges = graph.getEdges(Utils.getNodeNameFromCoordinates(positionX, positionY));
         if (edges != null && !edges.isEmpty()) {
-            message += "*M:" + getNodeNameFromCoordinates(positionX, positionY) + ",";
+            message += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
             for (int edgeName : edges) {
                 if (!message.contains(String.valueOf(edgeName))) message += edgeName + ",";
             }
@@ -84,18 +85,10 @@ public class MyKargar {
     }
 
     private void listenToMapMessage(World world) {
-        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
-            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
-            if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
-                int codeIndex = lastChat.indexOf("*M:");
-                int nextIndex = lastChat.indexOf(',');
-                int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
-                lastChat = lastChat.substring(nextIndex+1);
-                while (lastChat.contains(",")) {
-                    int edge = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
-                    addEdgeToGraph(srcNodeName, edge);
-                    lastChat = lastChat.substring(lastChat.indexOf(',')+1);
-                }
+        ArrayList<Integer> data = Utils.parseMapMessage(world, turn);
+        if (!data.isEmpty() && data.size() > 1) {
+            for (int i=1;i<data.size();i++) {
+                addEdgeToGraph(data.get(0), data.get(i));
             }
         }
     }
@@ -108,7 +101,7 @@ public class MyKargar {
 //        listenToResourceMessage(world);
         listenToMapMessage(world);
         mapViewDistance(world);
-        sortMap(world);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources);
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
         else return getNextMoveDirection(world);
@@ -130,23 +123,7 @@ public class MyKargar {
         }
     }
 
-    /**
-     * sort the list of nodes with resources, by their distance to current position MIN...MAX
-     * @param world
-     */
-    private void sortMap(World world) {
-        if (nodesWithResources != null && nodesWithResources.size() > 1) {
-            nodesWithResources.sort(new Comparator<MyNode>() {
-                @Override
-                public int compare(MyNode o1, MyNode o2) {
-                    int o2Distance = Math.abs(positionX-o2.getX()) + Math.abs(positionY-o2.getY());
-                    int o1Distance = Math.abs(positionX-o1.getX()) + Math.abs(positionY-o1.getY());
 
-                    return Integer.compare(o1Distance, o2Distance);
-                }
-            });
-        }
-    }
 
     /**
      * @param world
@@ -166,10 +143,10 @@ public class MyKargar {
         int leftGraphName = -1;
 
         //populate node names in format: XXYY
-        if (up != null) upGraphName = getNodeNameFromCell(up);
-        if (down != null) downGraphName = getNodeNameFromCell(down);
-        if (right != null) rightGraphName = getNodeNameFromCell(right);
-        if (left != null) leftGraphName = getNodeNameFromCell(left);
+        if (up != null) upGraphName = Utils.getNodeNameFromCell(up);
+        if (down != null) downGraphName = Utils.getNodeNameFromCell(down);
+        if (right != null) rightGraphName = Utils.getNodeNameFromCell(right);
+        if (left != null) leftGraphName = Utils.getNodeNameFromCell(left);
 
         //initialize BFS algorithm to find the shortest path
         BfsHelper bfs = new BfsHelper(graph);
@@ -184,7 +161,7 @@ public class MyKargar {
         }
 
         //return center if non is matched to BFS
-        return getRandomDirection();
+        return Utils.getRandomDirection();
     }
 
     /**
@@ -223,12 +200,12 @@ public class MyKargar {
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
                     //add cell to nodes with resources
-                    if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
-                        nodesWithResources.add(new MyNode(getNodeNameFromCell(neighbor), neighbor));
+                    if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
+                        nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                     }
                     //remove node from nodesWithResources if it's resource value is below 1
-                    else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(getNodeNameFromCell(neighbor))) {
-                        nodesWithResources.removeIf(node -> node.getGraphName() == getNodeNameFromCell(neighbor));
+                    else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
+                        nodesWithResources.removeIf(node -> node.getGraphName() == Utils.getNodeNameFromCell(neighbor));
                     }
                 }
             }
@@ -251,22 +228,22 @@ public class MyKargar {
             for (Cell relative : neighborCells) {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
                     if (relative.getType() != CellType.WALL) {
-                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+                        addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                     }
                 }
                 else if (relative.getXCoordinate() == doX && relative.getYCoordinate() == doY){
                     if (relative.getType() != CellType.WALL) {
-                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+                        addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                     }
                 }
                 else if (relative.getXCoordinate() == riX && relative.getYCoordinate() == riY){
                     if (relative.getType() != CellType.WALL) {
-                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+                        addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                     }
                 }
                 else if (relative.getXCoordinate() == leX && relative.getYCoordinate() == leY){
                     if (relative.getType() != CellType.WALL) {
-                        addEdgeToGraph(getNodeNameFromCell(neighbor), getNodeNameFromCell(relative));
+                        addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                     }
                 }
             }
@@ -290,8 +267,8 @@ public class MyKargar {
         //if there are no directions with resources, take the previous direction if available, if not pick one randomly
         if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
             //add node to list of nodes with resources
-            if (!nodesWithResourcesContains(getNodeNameFromCell(availableDirections.get(0).getCell()))) {
-                nodesWithResources.add(new MyNode(getNodeNameFromCell(availableDirections.get(0).getCell()), availableDirections.get(0).getCell()));
+            if (!nodesWithResourcesContains(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()))) {
+                nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()), availableDirections.get(0).getCell()));
             }
             return availableDirections.get(0).getDirection();
         }
@@ -325,21 +302,21 @@ public class MyKargar {
 
         //if direction is not wall and in reach(not to the other side of map)
         //then add to list of available directions and the graph
-        if (up != null && up.getType() != CellType.WALL && isCellInMovingBounds(up, world)) {
+        if (up != null && up.getType() != CellType.WALL && Utils.isCellInMovingBounds(up, world)) {
             availableDirections.add(new MyDirection(Direction.UP, up));
-            addEdgeToGraph(getNodeNameFromCell(up), positionGraphName);
+            addEdgeToGraph(Utils.getNodeNameFromCell(up), positionGraphName);
         }
-        if (down != null && down.getType() != CellType.WALL && isCellInMovingBounds(down, world)) {
+        if (down != null && down.getType() != CellType.WALL && Utils.isCellInMovingBounds(down, world)) {
             availableDirections.add(new MyDirection(Direction.DOWN, down));
-            addEdgeToGraph(getNodeNameFromCell(down), positionGraphName);
+            addEdgeToGraph(Utils.getNodeNameFromCell(down), positionGraphName);
         }
-        if (right != null && right.getType() != CellType.WALL && isCellInMovingBounds(right, world)) {
+        if (right != null && right.getType() != CellType.WALL && Utils.isCellInMovingBounds(right, world)) {
             availableDirections.add(new MyDirection(Direction.RIGHT, right));
-            addEdgeToGraph(getNodeNameFromCell(right), positionGraphName);
+            addEdgeToGraph(Utils.getNodeNameFromCell(right), positionGraphName);
         }
-        if (left != null && left.getType() != CellType.WALL && isCellInMovingBounds(left, world)) {
+        if (left != null && left.getType() != CellType.WALL && Utils.isCellInMovingBounds(left, world)) {
             availableDirections.add(new MyDirection(Direction.LEFT, left));
-            addEdgeToGraph(getNodeNameFromCell(left), positionGraphName);
+            addEdgeToGraph(Utils.getNodeNameFromCell(left), positionGraphName);
         }
 
         return availableDirections;
@@ -353,42 +330,5 @@ public class MyKargar {
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
 //            System.out.println("edge added : " + src + ">" +dest);
-    }
-
-    /**
-     *
-     * @param cell
-     * @param world
-     * @return if cell is in reach or not (currently used to check if cell if in the other side of map or not)
-     */
-    private boolean isCellInMovingBounds(Cell cell, World world) {
-        return Math.abs(cell.getXCoordinate() - world.getAnt().getXCoordinate()) +
-                Math.abs(cell.getYCoordinate() - world.getAnt().getYCoordinate()) <= 1;
-    }
-
-    private int getNodeNameFromCoordinates(int x, int y) {
-        int a = x;
-        int b = y;
-        int value = (a + b) * (a + b + 1) / 2 + b;
-
-        return value;
-    }
-
-    private int getNodeNameFromCell(Cell cell) {
-        int a = cell.getXCoordinate();
-        int b = cell.getYCoordinate();
-        int value = (a + b) * (a + b + 1) / 2 + b;
-
-        return value;
-    }
-
-    private Direction getRandomDirection() {
-        return switch (new Random().nextInt(4)) {
-            case 0 -> Direction.UP;
-            case 1 -> Direction.DOWN;
-            case 2 -> Direction.RIGHT;
-            case 3 -> Direction.LEFT;
-            default -> Direction.CENTER;
-        };
     }
 }

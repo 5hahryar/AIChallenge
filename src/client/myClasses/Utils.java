@@ -1,0 +1,96 @@
+package client.myClasses;
+
+import client.World;
+import client.bfs.MyNode;
+import client.model.Cell;
+import client.model.enums.Direction;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Random;
+
+public class Utils {
+
+    public static Direction getRandomDirection() {
+        return switch (new Random().nextInt(4)) {
+            case 0 -> Direction.UP;
+            case 1 -> Direction.DOWN;
+            case 2 -> Direction.RIGHT;
+            case 3 -> Direction.LEFT;
+            default -> Direction.CENTER;
+        };
+    }
+
+    public static int getNodeNameFromCoordinates(int x, int y) {
+        int a = x;
+        int b = y;
+        int value = (a + b) * (a + b + 1) / 2 + b;
+
+        return value;
+    }
+
+    public static int getNodeNameFromCell(Cell cell) {
+        int a = cell.getXCoordinate();
+        int b = cell.getYCoordinate();
+        int value = (a + b) * (a + b + 1) / 2 + b;
+
+        return value;
+    }
+
+    /**
+     *
+     * @param cell
+     * @param world
+     * @return if cell is in reach or not (currently used to check if cell if in the other side of map or not)
+     */
+    public static boolean isCellInMovingBounds(Cell cell, World world) {
+        return Math.abs(cell.getXCoordinate() - world.getAnt().getXCoordinate()) +
+                Math.abs(cell.getYCoordinate() - world.getAnt().getYCoordinate()) <= 1;
+    }
+
+    /**
+     * sort the list of nodes with resources, by their distance to current position MIN...MAX
+     * @param world
+     */
+    public static ArrayList<MyNode> sortMap(World world, ArrayList<MyNode> nodesWithResources) {
+        int positionX = world.getAnt().getXCoordinate();
+        int positionY = world.getAnt().getYCoordinate();
+
+        if (nodesWithResources != null && nodesWithResources.size() > 1) {
+            nodesWithResources.sort(new Comparator<MyNode>() {
+                @Override
+                public int compare(MyNode o1, MyNode o2) {
+                    int o2Distance = Math.abs(positionX-o2.getX()) + Math.abs(positionY-o2.getY());
+                    int o1Distance = Math.abs(positionX-o1.getX()) + Math.abs(positionY-o1.getY());
+
+                    return Integer.compare(o1Distance, o2Distance);
+                }
+            });
+        }
+        return nodesWithResources;
+    }
+
+    public static ArrayList<Integer> parseMapMessage(World world, int turn) {
+        ArrayList<Integer> data = new ArrayList<>();
+
+        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
+            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+            if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
+                int codeIndex = lastChat.indexOf("*M:");
+                int nextIndex = lastChat.indexOf(',');
+                int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
+                data.add(srcNodeName);
+
+                lastChat = lastChat.substring(nextIndex+1);
+                while (lastChat.contains(",")) {
+                    int edge = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
+                    data.add(edge);
+                    lastChat = lastChat.substring(lastChat.indexOf(',')+1);
+                }
+            }
+        }
+
+        return data;
+    }
+}

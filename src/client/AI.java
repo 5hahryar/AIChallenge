@@ -1,19 +1,10 @@
 package client;
 
 
-import client.bfs.AdjList;
-import client.bfs.BfsHelper;
-import client.bfs.Graph;
-import client.bfs.UnweightedShortestPath;
 import client.model.Answer;
-import client.model.Cell;
 import client.model.enums.AntType;
-import client.model.enums.CellType;
 import client.model.enums.Direction;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Random;
+import client.myClasses.MyKargar;
 
 /**
  * You must put your code in this class {@link AI}.
