@@ -38,17 +38,7 @@ public class MyKargar {
         positionY = world.getAnt().getYCoordinate();
         positionGraphName = getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
-
-        //if current cell has no resource remove it from nodesWithResource
-//        if (nodesWithResourcesContains(getNodeNameFromCell(world.getAnt().getLocationCell()))
-//                && world.getAnt().getLocationCell().getResource().getValue() <= 0) {
-//            for (MyNode node : nodesWithResources) {
-//                if (node.getGraphName() == getNodeNameFromCell(world.getAnt().getLocationCell())) {
-//                    nodesWithResources.remove(node);
-//                    System.out.println(getNodeNameFromCell(world.getAnt().getLocationCell()) + " node removed");
-//                }
-//            }
-//        }
+//        if (prevDirection == null) prevDirection = getRandomDirection();
 
         System.out.println("currently at: " + positionX + "," + positionY);
 
@@ -74,7 +64,7 @@ public class MyKargar {
 
     private void broadcastResources() {
         if (nodesWithResources != null && !nodesWithResources.isEmpty()) {
-            message += "*NWR:";
+            message += "*R:";
             for (MyNode node : nodesWithResources) {
                 message += node.getGraphName() + ",";
             }
@@ -96,19 +86,19 @@ public class MyKargar {
     }
 
     private void listenToResourceMessage(World world) {
-//        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
-//            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
-//            if (!lastChat.isEmpty()) {
-//                int codeIndex = lastChat.indexOf("*NWR:");
-//                int nextIndex = lastChat.indexOf(',');
-//                String name = lastChat.substring(codeIndex + 5, nextIndex);
-//                int nodeName = Integer.parseInt(name);
-//                if (!nodesWithResourcesContains(nodeName)) {
-//                    nodesWithResources.add(new MyNode(nodeName, -1, -1));
-//                    System.out.println("res from chat:" + nodeName);
-//                }
-//            }
-//        }
+        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
+            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+            if (!lastChat.isEmpty()) {
+                int codeIndex = lastChat.indexOf("*R:");
+                int nextIndex = lastChat.indexOf(',');
+                String name = lastChat.substring(codeIndex + 5, nextIndex);
+                int nodeName = Integer.parseInt(name);
+                if (!nodesWithResourcesContains(nodeName)) {
+                    nodesWithResources.add(new MyNode(nodeName, -1, -1));
+                    System.out.println("res from chat:" + nodeName);
+                }
+            }
+        }
     }
 
     /**
@@ -182,7 +172,6 @@ public class MyKargar {
             if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
             //null target if we are in it
             if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
-            //TODO:check targetNode not null and remove else below
             if (targetNode != null) return getDirectionToNode(world, targetNode.getGraphName());
         }
         ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
