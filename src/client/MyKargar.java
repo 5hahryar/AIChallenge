@@ -8,10 +8,7 @@ import client.model.Cell;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class MyKargar {
 
@@ -38,6 +35,7 @@ public class MyKargar {
         positionY = world.getAnt().getYCoordinate();
         positionGraphName = getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
+        message = "";
 //        if (prevDirection == null) prevDirection = getRandomDirection();
 
         System.out.println("currently at: " + positionX + "," + positionY);
@@ -46,6 +44,7 @@ public class MyKargar {
         nextMoveDirection = nextMoveDirectionKargar(world);
 
 //        broadcastResources();
+        broadcastMap();
 
 //        System.out.println("nodeswithres:" + nodesWithResources.toString());
         System.out.println("");
@@ -59,7 +58,19 @@ public class MyKargar {
         prevDirection = nextMoveDirection;
 
         System.out.println("direction" + nextMoveDirection);
+        System.out.println("message: " + message);
         return new Answer(nextMoveDirection, message, 10);
+    }
+
+    private void broadcastMap() {
+        LinkedList<Integer> edges = graph.getEdges(getNodeNameFromCoordinates(positionX, positionY));
+        if (edges != null && !edges.isEmpty()) {
+            message += "*M:" + getNodeNameFromCoordinates(positionX, positionY) + ",";
+            for (int edgeName : edges) {
+                if (!message.contains(String.valueOf(edgeName))) message += edgeName + ",";
+            }
+            message += "/";
+        }
     }
 
     private void broadcastResources() {
@@ -72,12 +83,30 @@ public class MyKargar {
         }
     }
 
+    private void listenToMapMessage(World world) {
+        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
+            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+            if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
+                int codeIndex = lastChat.indexOf("*M:");
+                int nextIndex = lastChat.indexOf(',');
+                int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
+                lastChat = lastChat.substring(nextIndex+1);
+                while (lastChat.contains(",")) {
+                    int edge = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
+                    addEdgeToGraph(srcNodeName, edge);
+                    lastChat = lastChat.substring(lastChat.indexOf(',')+1);
+                }
+            }
+        }
+    }
+
     /**
      * @param world
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        listenToResourceMessage(world);
+//        listenToResourceMessage(world);
+        listenToMapMessage(world);
         mapViewDistance(world);
         sortMap(world);
         //return to base if ant holds resources ELSE get another direction
