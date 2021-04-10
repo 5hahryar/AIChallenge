@@ -38,6 +38,13 @@ public class Utils {
         return value;
     }
 
+    public static int[] getCoordinatesFromName(int name) {
+        int t = (int) (Math.floor((Math.sqrt(8 * name + 1) - 1) / 2));
+        int x = t * (t + 3) / 2 - name;
+        int y = name - t * (t + 1) / 2;
+        return new int[]{x, y}; //Returning an array containing the two numbers
+    }
+
     /**
      *
      * @param cell
@@ -79,6 +86,9 @@ public class Utils {
             if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
                 int codeIndex = lastChat.indexOf("*M:");
                 int nextIndex = lastChat.indexOf(',');
+                if (lastChat.contains("*R:")) {
+                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf("/"));
+                }
                 int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
                 data.add(srcNodeName);
 
@@ -86,6 +96,29 @@ public class Utils {
                 while (lastChat.contains(",")) {
                     int edge = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
                     data.add(edge);
+                    lastChat = lastChat.substring(lastChat.indexOf(',')+1);
+                }
+            }
+        }
+
+        return data;
+    }
+
+    public static ArrayList<Integer> parseResourceMessage(World world, int turn) {
+        ArrayList<Integer> data = new ArrayList<>();
+
+        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
+            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+            if (!lastChat.isEmpty() && lastChat.contains("*R:")) {
+                int codeIndex = lastChat.indexOf("*R:");
+                int nextIndex = lastChat.indexOf(',');
+                if (lastChat.contains("*M:")) {
+                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf("/"));
+                }
+                lastChat = lastChat.substring(codeIndex+3);
+                while (lastChat.contains(",")) {
+                    int node = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
+                    data.add(node);
                     lastChat = lastChat.substring(lastChat.indexOf(',')+1);
                 }
             }

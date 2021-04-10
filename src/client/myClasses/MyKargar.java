@@ -13,11 +13,15 @@ import java.util.*;
 
 public class MyKargar {
 
+    private static final int MESSAGE_VALUE_RESOURCE = 5;
+    private static final int MESSAGE_VALUE_MAP = 4;
+    private static final int MESSAGE_VALUE_MAPRES = 8;
+
     public MyKargar() {
     }
 
-    private static String message = "";
     private static Direction prevDirection = Direction.UP;
+    private static ArrayList<MyMessage> messages = new ArrayList<>();
 
     private static final AdjList graph = new AdjList(10000, false);
 
@@ -36,52 +40,65 @@ public class MyKargar {
         positionY = world.getAnt().getYCoordinate();
         positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
-        message = "";
+        messages = new ArrayList<>();
 //        if (prevDirection == null) prevDirection = getRandomDirection();
 
-        System.out.println("currently at: " + positionX + "," + positionY);
+//        System.out.println("currently at: " + positionX + "," + positionY);
+
+        listenToResourceMessage(world);
+        listenToMapMessage(world);
+        mapViewDistance(world);
 
         Direction nextMoveDirection;
         nextMoveDirection = nextMoveDirectionKargar(world);
 
-//        broadcastResources();
+        broadcastResources();
         broadcastMap();
 
-//        System.out.println("nodeswithres:" + nodesWithResources.toString());
-        System.out.println("");
-        System.out.println("nodes with res:");
-        for (MyNode node: nodesWithResources) {
-            System.out.print(node.getGraphName() + "/");
-        }
-        if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
-        System.out.println("pos name : " + Utils.getNodeNameFromCell(world.getAnt().getLocationCell()));
-
         prevDirection = nextMoveDirection;
+        MyMessage message = getMessage();
 
-        System.out.println("direction" + nextMoveDirection);
-        System.out.println("message: " + message);
-        return new Answer(nextMoveDirection, message, 10);
+//        System.out.println("nodeswithres:" + nodesWithResources.toString());
+//        System.out.println("");
+//        System.out.println("nodes with res:");
+//        for (MyNode node: nodesWithResources) {
+//            System.out.print(node.getGraphName() + "/");
+//        }
+//        if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
+//        System.out.println("pos name : " + Utils.getNodeNameFromCell(world.getAnt().getLocationCell()));
+
+
+
+//        System.out.println("direction" + nextMoveDirection);
+        System.out.println("message: " + message.getMessage());
+
+
+        return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
     }
 
     private void broadcastMap() {
+        String m = "";
         LinkedList<Integer> edges = graph.getEdges(Utils.getNodeNameFromCoordinates(positionX, positionY));
         if (edges != null && !edges.isEmpty()) {
-            message += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
+            m += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
             for (int edgeName : edges) {
-                if (!message.contains(String.valueOf(edgeName))) message += edgeName + ",";
+                if (!m.contains(String.valueOf(edgeName))) m += edgeName + ",";
             }
-            message += "/";
+            m += "/";
         }
+        if (!m.isEmpty()) addMessage(new MyMessage(m, MESSAGE_VALUE_MAP));
     }
 
     private void broadcastResources() {
+        String m = "";
         if (nodesWithResources != null && !nodesWithResources.isEmpty()) {
-            message += "*R:";
+            m += "*R:";
             for (MyNode node : nodesWithResources) {
-                message += node.getGraphName() + ",";
+                m += node.getGraphName() + ",";
             }
-            message += "/";
+            m += "/";
         }
+        if (!m.isEmpty()) addMessage(new MyMessage(m, MESSAGE_VALUE_RESOURCE));
     }
 
     private void listenToMapMessage(World world) {
@@ -98,9 +115,6 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-//        listenToResourceMessage(world);
-        listenToMapMessage(world);
-        mapViewDistance(world);
         nodesWithResources = Utils.sortMap(world, nodesWithResources);
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
@@ -108,17 +122,11 @@ public class MyKargar {
     }
 
     private void listenToResourceMessage(World world) {
-        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
-            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
-            if (!lastChat.isEmpty()) {
-                int codeIndex = lastChat.indexOf("*R:");
-                int nextIndex = lastChat.indexOf(',');
-                String name = lastChat.substring(codeIndex + 5, nextIndex);
-                int nodeName = Integer.parseInt(name);
-                if (!nodesWithResourcesContains(nodeName)) {
-                    nodesWithResources.add(new MyNode(nodeName, -1, -1));
-                    System.out.println("res from chat:" + nodeName);
-                }
+        ArrayList<Integer> data = Utils.parseResourceMessage(world, turn);
+        if (!data.isEmpty() && data.size() > 1) {
+            for (int i=1;i<data.size();i++) {
+                int[] c = Utils.getCoordinatesFromName(data.get(i));
+                nodesWithResources.add(new MyNode(data.get(i), c[0], c[1]));
             }
         }
     }
@@ -330,5 +338,25 @@ public class MyKargar {
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
 //            System.out.println("edge added : " + src + ">" +dest);
+    }
+
+    private void addMessage(MyMessage message) {
+        messages.add(message);
+    }
+
+    private MyMessage getMessage() {
+        if (messages.size() > 1) {
+            messages.sort(new Comparator<MyMessage>() {
+                @Override
+                public int compare(MyMessage o1, MyMessage o2) {
+                    return Integer.compare(o2.getValue(), o1.getValue());
+                }
+            });
+        }
+        if (!messages.isEmpty() && messages.get(0).getMessage().length() > 15) return messages.get(0);
+        else if (!messages.isEmpty() && messages.size() > 1) {
+            return new MyMessage((messages.get(0).getMessage() + messages.get(1).getMessage()), MESSAGE_VALUE_MAPRES);
+        }
+        return new MyMessage("", 0);
     }
 }
