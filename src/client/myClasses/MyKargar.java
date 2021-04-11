@@ -36,20 +36,24 @@ public class MyKargar {
         this.turn = turn;
         initValues(world);
 
+        listenToResourceMessage(world);
+        listenToMapMessage(world);
+
         mapViewDistance(world);
         Direction nextMoveDirection = nextMoveDirectionKargar(world);
+
+        broadcastResources();
+        broadcastMap();
 
         MyMessage message = getMessage();
 //        if (prevDirection == null) prevDirection = getRandomDirection();
 
 //        System.out.println("currently at: " + positionX + "," + positionY);
 
-//        listenToResourceMessage(world);
-//        listenToMapMessage(world);
 
 
-//        broadcastResources();
-//        broadcastMap();
+
+
 
 //        prevDirection = nextMoveDirection;
 
