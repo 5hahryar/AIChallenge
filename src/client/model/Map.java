@@ -28,11 +28,13 @@ public class Map {
      * @param dx,dy are relative to current cell of ant
      */
     public Cell getRelativeCell(int dx, int dy) {
-        int x = antCurrentX + dx;
-        int y = antCurrentY + dy;
+        int x = (antCurrentX + dx) % width;
+        int y = (antCurrentY + dy) % height;
 
-        if (x < 0 | x >= width | y < 0 | y >= height)
-            return null;
+        if (x < 0)
+            x += width;
+        if (y < 0)
+            y += height;
 
         return cells[x][y];
     }
