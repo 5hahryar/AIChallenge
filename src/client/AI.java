@@ -5,6 +5,7 @@ import client.model.Answer;
 import client.model.enums.AntType;
 import client.model.enums.Direction;
 import client.myClasses.MyKargar;
+import client.myClasses.Utils;
 
 /**
  * You must put your code in this class {@link AI}.
@@ -24,8 +25,13 @@ public class AI {
     private static String message = "";
 
     private MyKargar myKargar = new MyKargar();
+    private static boolean isLogFileCreated = false;
 
     public Answer turn(World world) {
+        if (!isLogFileCreated) {
+            Utils.createLog();
+            isLogFileCreated = true;
+        }
         // Enter your AI code here
         AI.turn++;
         message = "";

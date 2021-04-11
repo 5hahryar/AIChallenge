@@ -6,6 +6,9 @@ import client.model.Cell;
 import client.model.enums.Direction;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
@@ -125,5 +128,31 @@ public class Utils {
         }
 
         return data;
+    }
+
+    public static void createLog() {
+        try {
+            File myObj = new File("myLog.txt");
+            if (myObj.createNewFile()) {
+                System.out.println("File created: " + myObj.getName());
+            } else {
+                System.out.println("File already exists.");
+            }
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeLog(String m) {
+        try {
+            FileWriter myWriter = new FileWriter("myLog.txt");
+            myWriter.write(m);
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
     }
 }
