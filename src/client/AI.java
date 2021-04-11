@@ -5,6 +5,7 @@ import client.model.Answer;
 import client.model.enums.AntType;
 import client.model.enums.Direction;
 import client.myClasses.MyKargar;
+import client.myClasses.MySarbaaz;
 import client.myClasses.Utils;
 
 /**
@@ -25,6 +26,7 @@ public class AI {
     private static String message = "";
 
     private MyKargar myKargar = new MyKargar();
+    private MySarbaaz mySarbaaz = new MySarbaaz();
     private static boolean isLogFileCreated = false;
 
     public Answer turn(World world) {
@@ -43,19 +45,6 @@ public class AI {
             System.out.println("*******");
             return myKargar.turn(world, turn);
         }
-        else nextMoveDirection = nextMoveDirectionSarbaaz(world);
-
-
-        return new Answer(nextMoveDirection, message, 10);
+        else return mySarbaaz.turn(world, turn);
     }
-
-    /**
-     * @param world
-     * @return next direction for sarbaaz to move
-     */
-    private Direction nextMoveDirectionSarbaaz(World world) {
-        return Direction.CENTER;
-    }
-
-
 }
