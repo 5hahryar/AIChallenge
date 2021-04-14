@@ -36,14 +36,14 @@ public class MyKargar {
         this.turn = turn;
         initValues(world);
 
-        listenToResourceMessage(world);
-        listenToMapMessage(world);
+//        listenToResourceMessage(world);
+//        listenToMapMessage(world);
 
         mapViewDistance(world);
         Direction nextMoveDirection = nextMoveDirectionKargar(world);
 
-        broadcastResources();
-        broadcastMap();
+//        broadcastResources();
+//        broadcastMap();
 
         MyMessage message = getMessage();
 //        if (prevDirection == null) prevDirection = getRandomDirection();
@@ -70,10 +70,10 @@ public class MyKargar {
 
 
 //        System.out.println("direction" + nextMoveDirection);
-        System.out.println("message: " + message.getMessage());
+//        System.out.println("message: " + message.getMessage());
 
         if (nextMoveDirection == Direction.CENTER) {
-            Utils.writeLog("CENTER :: target" + targetNode + ", res" + nodesWithResources.size() + "\n");
+//            Utils.writeLog("CENTER :: target" + targetNode + ", res" + nodesWithResources.size() + "\n");
         }
 
         return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
@@ -188,7 +188,7 @@ public class MyKargar {
             if (targetNode != null) return getDirectionToNode(world, targetNode.getGraphName());
         }
         else if (targetNode == null) {
-            System.out.println("EXPLORE");
+//            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
 
         }

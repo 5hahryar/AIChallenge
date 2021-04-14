@@ -31,7 +31,7 @@ public class AI {
 
     public Answer turn(World world) {
         if (!isLogFileCreated) {
-            Utils.createLog();
+//            Utils.createLog();
             isLogFileCreated = true;
         }
         // Enter your AI code here
@@ -41,8 +41,8 @@ public class AI {
         //get next direction for unit based on it's type
         Direction nextMoveDirection;
         if (world.getAnt().getType() == AntType.KARGAR) {
-            System.out.println("turn:" + turn);
-            System.out.println("*******");
+//            System.out.println("turn:" + turn);
+//            System.out.println("*******");
             return myKargar.turn(world, turn);
         }
         else return mySarbaaz.turn(world, turn);

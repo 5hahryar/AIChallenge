@@ -16,13 +16,20 @@ import java.util.Random;
 public class Utils {
 
     public static Direction getRandomDirection() {
-        return switch (new Random().nextInt(4)) {
-            case 0 -> Direction.UP;
-            case 1 -> Direction.DOWN;
-            case 2 -> Direction.RIGHT;
-            case 3 -> Direction.LEFT;
-            default -> Direction.CENTER;
-        };
+        int rand = new Random().nextInt(4);
+        if (rand == 0) return Direction.UP;
+        if (rand == 1) return Direction.DOWN;
+        if (rand == 2) return Direction.RIGHT;
+        if (rand == 3) return Direction.LEFT;
+        return Direction.CENTER;
+
+//        return switch (new Random().nextInt(4)) {
+//            case 0 -> Direction.UP;
+//            case 1 -> Direction.DOWN;
+//            case 2 -> Direction.RIGHT;
+//            case 3 -> Direction.LEFT;
+//            default -> Direction.CENTER;
+//        };
     }
 
     public static int getNodeNameFromCoordinates(int x, int y) {
