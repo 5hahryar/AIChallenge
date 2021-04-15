@@ -59,6 +59,7 @@ public class UnweightedShortestPath extends BFS {
 
         final UnweightedShortestPath usp = new UnweightedShortestPath(graph);
 //        graph.printGraph();
-        usp.findShortestPath(1234, 7811);
+        usp.findShortestPath(1234, 2450);
+        usp.getPathToDestination();
     }
 }

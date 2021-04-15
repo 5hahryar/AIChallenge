@@ -78,7 +78,7 @@ public class ExploreAgent implements AIAgent {
         for (int i = 0; i < 4; i++) {
             result.add(getCell(c.getXCoordinate() + dxs[i], c.getYCoordinate() + dys[i]));
         }
-        Collections.shuffle(result);
+//        Collections.shuffle(result);
         return result;
     }
 

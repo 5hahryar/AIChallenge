@@ -4,6 +4,7 @@ import client.World;
 import client.bfs.MyNode;
 import client.model.Cell;
 import client.model.enums.Direction;
+import client.model.enums.ResourceType;
 
 import javax.swing.*;
 import java.io.File;
@@ -80,6 +81,9 @@ public class Utils {
                 public int compare(MyNode o1, MyNode o2) {
                     int o2Distance = Math.abs(positionX-o2.getX()) + Math.abs(positionY-o2.getY());
                     int o1Distance = Math.abs(positionX-o1.getX()) + Math.abs(positionY-o1.getY());
+
+                    if (o1.getResourceType() != null && o1.getResourceType() == ResourceType.GRASS) o1Distance *= 2;
+                    if (o2.getResourceType() != null && o2.getResourceType() == ResourceType.GRASS) o2Distance *= 2;
 
                     return Integer.compare(o1Distance, o2Distance);
                 }

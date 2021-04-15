@@ -48,7 +48,20 @@ public class MyKargar {
         MyMessage message = getMessage();
 //        if (prevDirection == null) prevDirection = getRandomDirection();
 
-//        System.out.println("currently at: " + positionX + "," + positionY);
+//        System.out.println("turn: " + turn);
+//        System.out.println("currently at: " + positionX + "," + positionY + " name: " + positionGraphName);
+//        if (targetNode != null) {
+//            System.out.println("target: " + targetNode.getX() + "," + targetNode.getY() + " name: " + targetNode.getGraphName());
+//        }
+//        if (!nodesWithResources.isEmpty()) {
+//            System.out.println("nodes with res: ");
+//            for (MyNode node : nodesWithResources) {
+//                System.out.print(node.getGraphName() + "/");
+//            }
+//            System.out.println("");
+//        }
+//
+//        System.out.println("**************** \n");
 
 
 
@@ -182,12 +195,16 @@ public class MyKargar {
         if (!nodesWithResources.isEmpty()) {
             //choose a target randomly, and null it if in base
 
-            if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
+            if (targetNode == null) targetNode = nodesWithResources.get(0);
             //null target if we are in it
 
-            if (targetNode != null) return getDirectionToNode(world, targetNode.getGraphName());
+            if (targetNode != null) {
+                if (isTherePathToNode(targetNode.getGraphName())) {
+                    return getDirectionToNode(world, targetNode.getGraphName());
+                } else targetNode = null;
+            }
         }
-        else if (targetNode == null) {
+        if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
 
@@ -379,5 +396,11 @@ public class MyKargar {
                 nodesWithResources.add(new MyNode(data.get(i), c[0], c[1]));
             }
         }
+    }
+
+    private boolean isTherePathToNode(int target) {
+        BfsHelper bfs = new BfsHelper(graph);
+        bfs.findShortestPath(positionGraphName, target);
+        return !bfs.getPathToDestination().isEmpty();
     }
 }
