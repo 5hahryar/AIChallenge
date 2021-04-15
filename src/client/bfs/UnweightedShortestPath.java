@@ -1,5 +1,8 @@
 package client.bfs;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 /**
  * A BFS over a unweighted graph from a source vertex, say u, gives a shortest path from u to every other vertex.
  * Note: This is true for both directed an undirected graph but only if the source vertex of shortest path is the node
@@ -34,18 +37,29 @@ public class UnweightedShortestPath extends BFS {
     }
 
     public static void main(String[] args) {
-        Graph graph = new AdjList(1000, false);
-        graph.addEdge(1, 2);
-        graph.addEdge(1, 3);
-        graph.addEdge(2, 3);
-        graph.addEdge(3, 4);
-        graph.addEdge(3, 5);
-        graph.addEdge(5, 4);
-        graph.addEdge(4, 6);
+        ArrayList<MyNode> nodes = new ArrayList<>();
+        Graph graph = new AdjList(10000, false);
 
+        for (int a=0;a<31;a++) {
+            for (int b=0;b<31;b++) {
+                int value = (a + b) * (a + b + 1) / 2 + b;
+                nodes.add(new MyNode(value, a, b));
+            }
+        }
 
+        for (int i=0;i<20;i++) {
+            graph.addEdge(1234, 2234);
+            graph.addEdge(2234, 1234);
+            graph.addEdge(1234, 2234);
+            graph.addEdge(2234, 5462);
+            graph.addEdge(2234, 4453);
+            graph.addEdge(4453, 7811);
+            graph.addEdge(5462, 7811);
+        }
 
         final UnweightedShortestPath usp = new UnweightedShortestPath(graph);
-        usp.findShortestPath(1, 6);
+//        graph.printGraph();
+        usp.findShortestPath(1234, 2450);
+        usp.getPathToDestination();
     }
 }

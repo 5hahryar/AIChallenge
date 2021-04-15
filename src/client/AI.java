@@ -1,19 +1,12 @@
 package client;
 
 
-import client.bfs.AdjList;
-import client.bfs.BfsHelper;
-import client.bfs.Graph;
-import client.bfs.UnweightedShortestPath;
 import client.model.Answer;
-import client.model.Cell;
 import client.model.enums.AntType;
-import client.model.enums.CellType;
 import client.model.enums.Direction;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Random;
+import client.myClasses.MyKargar;
+import client.myClasses.MySarbaaz;
+import client.myClasses.Utils;
 
 /**
  * You must put your code in this class {@link AI}.
@@ -33,8 +26,14 @@ public class AI {
     private static String message = "";
 
     private MyKargar myKargar = new MyKargar();
+    private MySarbaaz mySarbaaz = new MySarbaaz();
+    private static boolean isLogFileCreated = false;
 
     public Answer turn(World world) {
+        if (!isLogFileCreated) {
+//            Utils.createLog();
+            isLogFileCreated = true;
+        }
         // Enter your AI code here
         AI.turn++;
         message = "";
@@ -42,31 +41,10 @@ public class AI {
         //get next direction for unit based on it's type
         Direction nextMoveDirection;
         if (world.getAnt().getType() == AntType.KARGAR) {
-            System.out.println("turn:" + turn);
-            System.out.println("*******");
-            return myKargar.turn(world);
+//            System.out.println("turn:" + turn);
+//            System.out.println("*******");
+            return myKargar.turn(world, turn);
         }
-        else nextMoveDirection = nextMoveDirectionSarbaaz(world);
-
-
-        return new Answer(nextMoveDirection, message, 10);
-    }
-
-    /**
-     * @param world
-     * @return next direction for sarbaaz to move
-     */
-    private Direction nextMoveDirectionSarbaaz(World world) {
-        return Direction.CENTER;
-    }
-
-    private Direction getRandomDirection() {
-        return switch (new Random().nextInt(4)) {
-            case 0 -> Direction.UP;
-            case 1 -> Direction.DOWN;
-            case 2 -> Direction.RIGHT;
-            case 3 -> Direction.LEFT;
-            default -> Direction.CENTER;
-        };
+        else return mySarbaaz.turn(world, turn);
     }
 }

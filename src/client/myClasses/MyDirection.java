@@ -1,4 +1,4 @@
-package client;
+package client.myClasses;
 
 import client.model.Cell;
 import client.model.enums.Direction;
