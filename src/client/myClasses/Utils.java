@@ -3,6 +3,7 @@ package client.myClasses;
 import client.World;
 import client.bfs.MyNode;
 import client.model.Cell;
+import client.model.Chat;
 import client.model.enums.Direction;
 import client.model.enums.ResourceType;
 
@@ -10,9 +11,7 @@ import javax.swing.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Random;
+import java.util.*;
 
 public class Utils {
 
@@ -94,15 +93,17 @@ public class Utils {
 
     public static ArrayList<Integer> parseMapMessage(World world, int turn) {
         ArrayList<Integer> data = new ArrayList<>();
-
-        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
-            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+        List<Chat> allChats = world.getChatBox().getAllChats();
+        allChats = sortChatOnTurn(allChats);
+        if (!allChats.isEmpty()) {
+            String lastChat = allChats.get(0).getText();
             if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
                 int codeIndex = lastChat.indexOf("*M:");
-                int nextIndex = lastChat.indexOf(',');
                 if (lastChat.contains("*R:")) {
-                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf("/"));
+                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf('m'));
                 }
+                codeIndex = lastChat.indexOf("*M:");
+                int nextIndex = lastChat.indexOf(',');
                 int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
                 data.add(srcNodeName);
 
@@ -118,17 +119,60 @@ public class Utils {
         return data;
     }
 
+    private static List<Chat> sortChatOnTurn(List<Chat> allChats) {
+        allChats.sort(new Comparator<Chat>() {
+            @Override
+            public int compare(Chat o1, Chat o2) {
+                return Integer.compare(o2.getTurn(), o1.getTurn());
+            }
+        });
+        return allChats;
+    }
+
+    public static ArrayList<ArrayList<Integer>> parseAllMapMessage(World world, int turn) {
+        ArrayList<ArrayList<Integer>> data = new ArrayList<>();
+        List<Chat> chats = world.getChatBox().getAllChats();
+        if (!chats.isEmpty()) {
+            for (Chat chat : chats) {
+                ArrayList<Integer> nodeEdges = new ArrayList<>();
+                String lastChat = chat.getText();
+                if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
+                    int codeIndex = lastChat.indexOf("*M:");
+                    if (lastChat.contains("*R:")) {
+                        lastChat = lastChat.substring(codeIndex, lastChat.indexOf('m'));
+                    }
+                    codeIndex = lastChat.indexOf("*M:");
+                    int nextIndex = lastChat.indexOf(',');
+                    int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex + 3, nextIndex));
+                    nodeEdges.add(srcNodeName);
+
+                    lastChat = lastChat.substring(nextIndex + 1);
+                    while (lastChat.contains(",")) {
+                        int edge = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
+                        nodeEdges.add(edge);
+                        lastChat = lastChat.substring(lastChat.indexOf(',') + 1);
+                    }
+                }
+                data.add(nodeEdges);
+            }
+        }
+
+        return data;
+    }
+
     public static ArrayList<Integer> parseResourceMessage(World world, int turn) {
         ArrayList<Integer> data = new ArrayList<>();
-
-        if (!world.getChatBox().getAllChatsOfTurn(turn-1).isEmpty()) {
-            String lastChat = world.getChatBox().getAllChatsOfTurn(turn - 1).get(0).getText();
+        List<Chat> allChats = world.getChatBox().getAllChats();
+        allChats = sortChatOnTurn(allChats);
+        if (!allChats.isEmpty()) {
+            String lastChat = allChats.get(0).getText();
             if (!lastChat.isEmpty() && lastChat.contains("*R:")) {
                 int codeIndex = lastChat.indexOf("*R:");
-                int nextIndex = lastChat.indexOf(',');
                 if (lastChat.contains("*M:")) {
-                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf("/"));
+                    lastChat = lastChat.substring(codeIndex, lastChat.indexOf('r'));
                 }
+                codeIndex = lastChat.indexOf("*R:");
+                int nextIndex = lastChat.indexOf(',');
                 lastChat = lastChat.substring(codeIndex+3);
                 while (lastChat.contains(",")) {
                     int node = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
@@ -166,4 +210,5 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
 }

@@ -28,6 +28,7 @@ public class MyKargar {
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
     private MyNode targetNode;
     private ExploreAgent exploreAgent;
+    private boolean isNewBorn = true;
 
     public MyKargar() { }
 
@@ -36,17 +37,16 @@ public class MyKargar {
         this.turn = turn;
         initValues(world);
 
-//        listenToResourceMessage(world);
-//        listenToMapMessage(world);
+        listenToResourceMessage(world);
+        listenToMapMessage(world);
 
         mapViewDistance(world);
         Direction nextMoveDirection = nextMoveDirectionKargar(world);
 
-//        broadcastResources();
-//        broadcastMap();
+        broadcastResources();
+        broadcastMap();
 
         MyMessage message = getMessage();
-//        if (prevDirection == null) prevDirection = getRandomDirection();
 
 //        System.out.println("turn: " + turn);
 //        System.out.println("currently at: " + positionX + "," + positionY + " name: " + positionGraphName);
@@ -60,8 +60,16 @@ public class MyKargar {
 //            }
 //            System.out.println("");
 //        }
-//
 //        System.out.println("**************** \n");
+
+
+//        if (prevDirection == null) prevDirection = getRandomDirection();
+
+//        System.out.println("turn: " + turn);
+
+
+//
+//
 
 
 
@@ -89,6 +97,7 @@ public class MyKargar {
 //            Utils.writeLog("CENTER :: target" + targetNode + ", res" + nodesWithResources.size() + "\n");
         }
 
+        isNewBorn = false;
         return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
     }
 
@@ -362,7 +371,7 @@ public class MyKargar {
             for (int edgeName : edges) {
                 if (!m.contains(String.valueOf(edgeName))) m += edgeName + ",";
             }
-            m += "/";
+            m += "m";
         }
         if (!m.isEmpty()) addMessage(new MyMessage(m, MESSAGE_VALUE_MAP));
     }
@@ -374,16 +383,32 @@ public class MyKargar {
             for (MyNode node : nodesWithResources) {
                 m += node.getGraphName() + ",";
             }
-            m += "/";
+            m += "r";
         }
         if (!m.isEmpty()) addMessage(new MyMessage(m, MESSAGE_VALUE_RESOURCE));
     }
 
     private void listenToMapMessage(World world) {
-        ArrayList<Integer> data = Utils.parseMapMessage(world, turn);
-        if (!data.isEmpty() && data.size() > 1) {
-            for (int i=1;i<data.size();i++) {
-                addEdgeToGraph(data.get(0), data.get(i));
+        if (isNewBorn) {
+            ArrayList<ArrayList<Integer>> data = new ArrayList<>();
+            data = Utils.parseAllMapMessage(world, turn);
+            if (!data.isEmpty()) {
+                for (ArrayList<Integer> nodeEdges : data) {
+                    if (!data.isEmpty() && data.size() > 1) {
+                        for (int i = 1; i < nodeEdges.size(); i++) {
+                            addEdgeToGraph(nodeEdges.get(0), nodeEdges.get(i));
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            ArrayList<Integer> data = new ArrayList<>();
+            data = Utils.parseMapMessage(world, turn);
+            if (!data.isEmpty() && data.size() > 1) {
+                for (int i = 1; i < data.size(); i++) {
+                    addEdgeToGraph(data.get(0), data.get(i));
+                }
             }
         }
     }
@@ -393,7 +418,9 @@ public class MyKargar {
         if (!data.isEmpty() && data.size() > 1) {
             for (int i=1;i<data.size();i++) {
                 int[] c = Utils.getCoordinatesFromName(data.get(i));
-                nodesWithResources.add(new MyNode(data.get(i), c[0], c[1]));
+                if (!nodesWithResourcesContains(data.get(i))) {
+                    nodesWithResources.add(new MyNode(data.get(i), c[0], c[1]));
+                }
             }
         }
     }
