@@ -185,6 +185,23 @@ public class Utils {
         return data;
     }
 
+    public static int parseBaseMessage(World world, int turn) {
+        int data = -1;
+        List<Chat> allChats = world.getChatBox().getAllChats();
+        allChats = sortChatOnTurn(allChats);
+        if (!allChats.isEmpty()) {
+            String lastChat = allChats.get(0).getText();
+            if (!lastChat.isEmpty() && lastChat.contains("*B:")) {
+                int codeIndex = lastChat.indexOf("*B:");
+                int endIndex = lastChat.indexOf('b');
+                lastChat = lastChat.substring(codeIndex+3, endIndex);
+                data = Integer.parseInt(lastChat);
+            }
+        }
+
+        return data;
+    }
+
     public static void createLog() {
         try {
             File myObj = new File("myLog.txt");
@@ -210,5 +227,6 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
 
 }

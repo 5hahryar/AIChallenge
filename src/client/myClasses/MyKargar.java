@@ -16,6 +16,7 @@ public class MyKargar {
     private static final int MESSAGE_VALUE_RESOURCE = 5;
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
+    private static final int MESSAGE_VALUE_BASE = 10;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
     private static final AdjList graph = new AdjList(10000, false);
@@ -23,12 +24,15 @@ public class MyKargar {
     private int positionX;
     private int positionY;
     private int positionGraphName;
+    private int baseX;
+    private int baseY;
     private int baseGraphName;
     private int turn;
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
     private MyNode targetNode;
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
+    private int enemyBaseGraphName = -1;
 
     public MyKargar() { }
 
@@ -93,9 +97,9 @@ public class MyKargar {
 //        System.out.println("direction" + nextMoveDirection);
 //        System.out.println("message: " + message.getMessage());
 
-        if (nextMoveDirection == Direction.CENTER) {
+//        if (nextMoveDirection == Direction.CENTER) {
 //            Utils.writeLog("CENTER :: target" + targetNode + ", res" + nodesWithResources.size() + "\n");
-        }
+//        }
 
         isNewBorn = false;
         return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
@@ -104,6 +108,8 @@ public class MyKargar {
     private void initValues(World world) {
         positionX = world.getAnt().getXCoordinate();
         positionY = world.getAnt().getYCoordinate();
+        baseX = world.getBaseX();
+        baseY = world.getBaseY();
         positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         messages = new ArrayList<>();
@@ -129,6 +135,9 @@ public class MyKargar {
                     //add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
+                    }
+                    if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
+                        addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
                     }
                     //remove node from nodesWithResources if it's resource value is below 1
                     else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
@@ -185,6 +194,9 @@ public class MyKargar {
     private Direction nextMoveDirectionKargar(World world) {
         nodesWithResources = Utils.sortMap(world, nodesWithResources);
 
+        if (enemyBaseGraphName != -1) {
+            return getDirectionToNode(world, baseGraphName);
+        }
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
             targetNode = null;
@@ -421,6 +433,15 @@ public class MyKargar {
                 if (!nodesWithResourcesContains(data.get(i))) {
                     nodesWithResources.add(new MyNode(data.get(i), c[0], c[1]));
                 }
+            }
+        }
+    }
+
+    private void listenToEnemyBaseMessage(World world) {
+        if (enemyBaseGraphName == -1) {
+            int base = Utils.parseBaseMessage(world, turn);
+            if (base != -1) {
+                enemyBaseGraphName = base;
             }
         }
     }
