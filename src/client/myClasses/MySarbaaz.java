@@ -5,7 +5,9 @@ import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
+import client.model.Ant;
 import client.model.Cell;
+import client.model.enums.AntTeam;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
@@ -36,6 +38,8 @@ public class MySarbaaz {
     private MyNode targetNode;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
+    private int lootAmountInArea;
+    private boolean isEnemyInArea;
 
     public Answer turn(World world, int turn) {
         //Initialize values
@@ -55,7 +59,7 @@ public class MySarbaaz {
         MyMessage message = getMessage();
 
         isNewBorn = false;
-        return new Answer(nextMoveDirectionSarbaaz(world), "", 0);
+        return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
     }
 
     private void initValues(World world) {
@@ -66,6 +70,8 @@ public class MySarbaaz {
         baseY = world.getBaseY();
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         messages = new ArrayList<>();
+        lootAmountInArea = 0;
+        isEnemyInArea = false;
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world);
         }
@@ -85,9 +91,21 @@ public class MySarbaaz {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    //is enemy in cell
+                    if (!neighbor.getAnts().isEmpty()){
+                        for (Ant ant : neighbor.getAnts()) {
+                            if (ant.getTeam() == AntTeam.ENEMY) {
+                                isEnemyInArea = true;
+                                break;
+                            }
+                        }
+                    }
                     //add cell to nodes with resources
-                    if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
-                        nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
+                    if (neighbor.getResource().getValue() > 0) {
+                        lootAmountInArea += neighbor.getResource().getValue();
+                        if (!nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
+                            nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
+                        }
                     }
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
@@ -152,6 +170,7 @@ public class MySarbaaz {
         }
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) {
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
+            if (lootAmountInArea < 100 && !isEnemyInArea) targetNode = null;
             else return Direction.CENTER;
         }
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
