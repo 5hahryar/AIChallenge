@@ -379,7 +379,7 @@ public class MyKargar {
         String m = "";
         LinkedList<Integer> edges = graph.getEdges(Utils.getNodeNameFromCoordinates(positionX, positionY));
         if (edges != null && !edges.isEmpty()) {
-            m += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
+            m += "M" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
             for (int edgeName : edges) {
                 if (!m.contains(String.valueOf(edgeName))) m += edgeName + ",";
             }
@@ -391,7 +391,7 @@ public class MyKargar {
     private void broadcastResources() {
         String m = "";
         if (nodesWithResources != null && !nodesWithResources.isEmpty()) {
-            m += "*R:";
+            m += "R";
             for (MyNode node : nodesWithResources) {
                 m += node.getGraphName() + ",";
             }
