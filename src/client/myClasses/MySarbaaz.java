@@ -165,8 +165,8 @@ public class MySarbaaz {
     private Direction nextMoveDirectionSarbaaz(World world) {
         nodesWithResources = Utils.sortMap(world, nodesWithResources);
 
-        //if enemy based has been found, go to it
-        if (enemyBaseGraphName != -1) {
+        //if enemy based has been found and there is a path to it, go for it
+        if (enemyBaseGraphName != -1 && isTherePathToNode(enemyBaseGraphName)) {
             return getDirectionToNode(world, enemyBaseGraphName);
         }
         //if we are at target ...
