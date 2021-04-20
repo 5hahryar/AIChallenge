@@ -194,10 +194,13 @@ public class MyKargar {
     private Direction nextMoveDirectionKargar(World world) {
         nodesWithResources = Utils.sortMap(world, nodesWithResources);
 
+        //if enemy based has been found, go to it
         if (enemyBaseGraphName != -1) {
             return getDirectionToNode(world, baseGraphName);
         }
+        //if we are at target, nullify it
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
+        //if we are at base, nullify target
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
             targetNode = null;
         }
@@ -214,17 +217,20 @@ public class MyKargar {
     private Direction getNextMoveDirection(World world) {
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
-            //choose a target randomly, and null it if in base
-
+            //choose target if it's null
             if (targetNode == null) targetNode = nodesWithResources.get(0);
-            //null target if we are in it
-
+            //go to target if there is a path to it, otherwise nullify it
             if (targetNode != null) {
+                //if target is different from first nodeWithRes, change it
+                if (targetNode.getGraphName() != nodesWithResources.get(0).getGraphName()) {
+                    targetNode = nodesWithResources.get(0);
+                }
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
                 } else targetNode = null;
             }
         }
+        //go explore if none of the conditions above are met and we have no target
         if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();

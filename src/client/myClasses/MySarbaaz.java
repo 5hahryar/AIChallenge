@@ -165,11 +165,15 @@ public class MySarbaaz {
     private Direction nextMoveDirectionSarbaaz(World world) {
         nodesWithResources = Utils.sortMap(world, nodesWithResources);
 
+        //if enemy based has been found, go to it
         if (enemyBaseGraphName != -1) {
             return getDirectionToNode(world, enemyBaseGraphName);
         }
+        //if we are at target ...
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) {
+            //if we are at target and it has no resources, nullify it
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
+            //if total area res amount is below 100 and no enemy in sight, nullify target
             if (lootAmountInArea < 100 && !isEnemyInArea) targetNode = null;
             else return Direction.CENTER;
         }
@@ -188,10 +192,8 @@ public class MySarbaaz {
     private Direction getNextMoveDirection(World world) {
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
-            //choose a target randomly, and null it if in base
-
+            //choose a target randomly from nodesWithRes
             if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
-            //null target if we are in it
 
             if (targetNode != null) {
                 if (isTherePathToNode(targetNode.getGraphName())) {
