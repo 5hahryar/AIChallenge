@@ -5,7 +5,10 @@ import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
+import client.model.Ant;
 import client.model.Cell;
+import client.model.enums.AntTeam;
+import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
@@ -33,6 +36,7 @@ public class MyKargar {
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
+    private boolean isEnemySarbaazInSight;
 
     public MyKargar() { }
 
@@ -112,6 +116,7 @@ public class MyKargar {
         baseY = world.getBaseY();
         positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
+        isEnemySarbaazInSight = false;
         messages = new ArrayList<>();
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world);
@@ -132,6 +137,15 @@ public class MyKargar {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    //is enemy in cell
+                    if (!neighbor.getAnts().isEmpty()){
+                        for (Ant ant : neighbor.getAnts()) {
+                            if (ant.getType() == AntType.SARBAAZ && ant.getTeam() == AntTeam.ENEMY) {
+                                isEnemySarbaazInSight = true;
+                                break;
+                            }
+                        }
+                    }
                     //add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
@@ -206,8 +220,18 @@ public class MyKargar {
         }
 
         //return to base if ant holds resources ELSE get another direction
-        if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
-        else return getNextMoveDirection(world);
+        //if holding below 6 resources go for next res if no enemy is visible
+        //and target is in sight
+        int holdingResAmount = world.getAnt().getCurrentResource().getValue();
+        if (holdingResAmount > 6) return getDirectionToNode(world, baseGraphName);
+        else if (!isEnemySarbaazInSight && !nodesWithResources.isEmpty()) {
+            int[] positionXY = new int[]{positionX, positionY};
+            int[] targetXY = new int[]{nodesWithResources.get(0).getX(), nodesWithResources.get(0).getY()};
+            if (Utils.isCellInSight(positionXY, targetXY, world)) {
+                return getDirectionToNode(world, nodesWithResources.get(0).getGraphName());
+            }
+        }
+        return getNextMoveDirection(world);
     }
 
     /**

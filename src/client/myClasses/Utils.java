@@ -229,4 +229,8 @@ public class Utils {
     }
 
 
+    public static boolean isCellInSight(int[] positionXY, int[] targetXY, World world) {
+        return Math.abs(positionXY[0] - targetXY[0]) +
+                Math.abs(positionXY[1] - targetXY[1]) <= world.getAnt().getViewDistance();
+    }
 }

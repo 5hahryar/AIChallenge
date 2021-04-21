@@ -14,7 +14,6 @@ import client.model.enums.Direction;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Random;
 
 public class MySarbaaz {
 
@@ -39,7 +38,7 @@ public class MySarbaaz {
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
     private int lootAmountInArea;
-    private boolean isEnemyInArea;
+    private boolean isEnemyInSight;
 
     public Answer turn(World world, int turn) {
         //Initialize values
@@ -71,7 +70,7 @@ public class MySarbaaz {
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         messages = new ArrayList<>();
         lootAmountInArea = 0;
-        isEnemyInArea = false;
+        isEnemyInSight = false;
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world);
         }
@@ -95,7 +94,7 @@ public class MySarbaaz {
                     if (!neighbor.getAnts().isEmpty()){
                         for (Ant ant : neighbor.getAnts()) {
                             if (ant.getTeam() == AntTeam.ENEMY) {
-                                isEnemyInArea = true;
+                                isEnemyInSight = true;
                                 break;
                             }
                         }
@@ -174,7 +173,7 @@ public class MySarbaaz {
             //if we are at target and it has no resources, nullify it
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
             //if total area res amount is below 100 and no enemy in sight, nullify target
-            if (lootAmountInArea < 100 && !isEnemyInArea) {
+            if (lootAmountInArea < 100 && !isEnemyInSight) {
                 //this is to make sure that the same target doesn't get picked in this turn
                 nodesWithResources.remove(targetNode);
                 targetNode = null;
