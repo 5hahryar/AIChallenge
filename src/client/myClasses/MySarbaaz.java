@@ -174,7 +174,11 @@ public class MySarbaaz {
             //if we are at target and it has no resources, nullify it
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
             //if total area res amount is below 100 and no enemy in sight, nullify target
-            if (lootAmountInArea < 100 && !isEnemyInArea) targetNode = null;
+            if (lootAmountInArea < 100 && !isEnemyInArea) {
+                //this is to make sure that the same target doesn't get picked in this turn
+                nodesWithResources.remove(targetNode);
+                targetNode = null;
+            }
             else return Direction.CENTER;
         }
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
@@ -193,7 +197,7 @@ public class MySarbaaz {
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             //choose a target randomly from nodesWithRes
-            if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
+            if (targetNode == null) targetNode = nodesWithResources.get(0);
 
             if (targetNode != null) {
                 if (isTherePathToNode(targetNode.getGraphName())) {
