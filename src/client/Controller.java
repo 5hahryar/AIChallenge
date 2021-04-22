@@ -105,6 +105,9 @@ public class Controller {
                 break;
             case "7":
                 System.exit(0);
+            case "8":
+                // dummy message to ignore
+                break;
             default:
                 Log.w(TAG, "Undefined message received: " + msg.type);
                 break;
@@ -146,7 +149,17 @@ public class Controller {
         new Thread(() ->
         {
             try {
-                sendResult(ai.turn(game));
+                long start = System.currentTimeMillis();
+                System.out.println(start);
+                Answer answer = ai.turn(game);
+                long diff = System.currentTimeMillis() - start;
+                if (diff > 2000) {
+                    // ignore
+                } else if (diff > 500) {
+                    sendResult(new Answer(Direction.CENTER));
+                } else {
+                    sendResult(answer);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
