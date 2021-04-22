@@ -8,6 +8,7 @@ import client.model.Answer;
 import client.model.Cell;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
+import jdk.jshell.execution.Util;
 
 import java.util.*;
 
@@ -30,6 +31,7 @@ public class MyKargar {
     private int turn;
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
     private MyNode targetNode;
+    private MyNode persistentTarget;
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
@@ -57,10 +59,11 @@ public class MyKargar {
 //        if (targetNode != null) {
 //            System.out.println("target: " + targetNode.getX() + "," + targetNode.getY() + " name: " + targetNode.getGraphName());
 //        }
-//        if (!nodesWithResources.isEmpty()) {
+//        if (!nodesWithResources.isEmpty() && Utils.getNodeNameFromCoordinates(positionX, positionY) == baseGraphName) {
 //            System.out.println("nodes with res: ");
 //            for (MyNode node : nodesWithResources) {
-//                System.out.print(node.getGraphName() + "/");
+//                int[] c = Utils.getCoordinatesFromName(node.getGraphName());
+//                System.out.print(c[0] + "," + c[1] + "/");
 //            }
 //            System.out.println("");
 //        }
@@ -132,6 +135,9 @@ public class MyKargar {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
+                        enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
+                    }
                     //add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
@@ -160,6 +166,11 @@ public class MyKargar {
             int riY = neighbor.getYCoordinate();
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
+
+            if (upY < 0) upY = world.getMapHeight() + upY;
+            if (leX < 0) leX = world.getMapWidth() + upY;
+            if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
+            if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
 
             //find the up,down,right.left neighbor cells and add edge from neighbor to them, into the graph
             for (Cell relative : neighborCells) {
@@ -192,15 +203,18 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
-        if (enemyBaseGraphName != -1) {
-            return getDirectionToNode(world, baseGraphName);
-        }
+//        if (enemyBaseGraphName != -1 && isAntInEnemyBaseArea()) {
+//            persistentTarget = new MyNode(baseGraphName, baseX, baseY);
+//        }
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
-        if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
+        if (positionX == baseX && positionY == baseY) {
             targetNode = null;
         }
+//        if (persistentTarget != null && positionGraphName == persistentTarget.getGraphName()) {
+//            persistentTarget = null;
+//        }
 
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
@@ -212,6 +226,9 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
+//        if (persistentTarget != null) {
+//            return getDirectionToNode(world, persistentTarget.getGraphName());
+//        }
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             //choose a target randomly, and null it if in base
@@ -352,7 +369,9 @@ public class MyKargar {
      */
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
-//            System.out.println("edge added : " + src + ">" +dest);
+//            int[] cs = Utils.getCoordinatesFromName(src);
+//            int[] cd = Utils.getCoordinatesFromName(dest);
+//            System.out.println("edge added : " + cs[0] + "," + cs[1] + ">" + cd[0] + "," + cd[1] );
     }
 
     private void addMessage(MyMessage message) {
@@ -451,4 +470,13 @@ public class MyKargar {
         bfs.findShortestPath(positionGraphName, target);
         return !bfs.getPathToDestination().isEmpty();
     }
+
+    private boolean isAntInEnemyBaseArea() {
+        if (enemyBaseGraphName != -1) {
+            int[] enemyBaseXY = Utils.getCoordinatesFromName(enemyBaseGraphName);
+            int distance = Math.abs(positionX - enemyBaseXY[0]) + Math.abs(positionY - enemyBaseXY[1]);
+            return distance <= 6;
+        } else return false;
+    }
+
 }
