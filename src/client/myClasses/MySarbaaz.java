@@ -145,7 +145,7 @@ public class MySarbaaz {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionSarbaaz(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
         if (enemyBaseGraphName != -1) {
             return getDirectionToNode(world, enemyBaseGraphName);

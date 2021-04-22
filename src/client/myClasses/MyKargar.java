@@ -8,6 +8,7 @@ import client.model.Answer;
 import client.model.Cell;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
+import jdk.jshell.execution.Util;
 
 import java.util.*;
 
@@ -57,10 +58,11 @@ public class MyKargar {
 //        if (targetNode != null) {
 //            System.out.println("target: " + targetNode.getX() + "," + targetNode.getY() + " name: " + targetNode.getGraphName());
 //        }
-//        if (!nodesWithResources.isEmpty()) {
+//        if (!nodesWithResources.isEmpty() && Utils.getNodeNameFromCoordinates(positionX, positionY) == baseGraphName) {
 //            System.out.println("nodes with res: ");
 //            for (MyNode node : nodesWithResources) {
-//                System.out.print(node.getGraphName() + "/");
+//                int[] c = Utils.getCoordinatesFromName(node.getGraphName());
+//                System.out.print(c[0] + "," + c[1] + "/");
 //            }
 //            System.out.println("");
 //        }
@@ -161,6 +163,11 @@ public class MyKargar {
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
 
+            if (upY < 0) upY = world.getMapHeight() + upY;
+            if (leX < 0) leX = world.getMapWidth() + upY;
+            if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
+            if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
+
             //find the up,down,right.left neighbor cells and add edge from neighbor to them, into the graph
             for (Cell relative : neighborCells) {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
@@ -192,7 +199,7 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
         if (enemyBaseGraphName != -1) {
             return getDirectionToNode(world, baseGraphName);
@@ -352,7 +359,9 @@ public class MyKargar {
      */
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
-//            System.out.println("edge added : " + src + ">" +dest);
+//            int[] cs = Utils.getCoordinatesFromName(src);
+//            int[] cd = Utils.getCoordinatesFromName(dest);
+//            System.out.println("edge added : " + cs[0] + "," + cs[1] + ">" + cd[0] + "," + cd[1] );
     }
 
     private void addMessage(MyMessage message) {
