@@ -31,6 +31,7 @@ public class MyKargar {
     private int turn;
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
     private MyNode targetNode;
+    private MyNode persistentTarget;
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
@@ -134,6 +135,9 @@ public class MyKargar {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
+                        enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
+                    }
                     //add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
@@ -201,13 +205,16 @@ public class MyKargar {
     private Direction nextMoveDirectionKargar(World world) {
         nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
-        if (enemyBaseGraphName != -1) {
-            return getDirectionToNode(world, baseGraphName);
-        }
+//        if (enemyBaseGraphName != -1 && isAntInEnemyBaseArea()) {
+//            persistentTarget = new MyNode(baseGraphName, baseX, baseY);
+//        }
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
-        if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
+        if (positionX == baseX && positionY == baseY) {
             targetNode = null;
         }
+//        if (persistentTarget != null && positionGraphName == persistentTarget.getGraphName()) {
+//            persistentTarget = null;
+//        }
 
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
@@ -219,6 +226,9 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
+//        if (persistentTarget != null) {
+//            return getDirectionToNode(world, persistentTarget.getGraphName());
+//        }
         //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             //choose a target randomly, and null it if in base
@@ -460,4 +470,13 @@ public class MyKargar {
         bfs.findShortestPath(positionGraphName, target);
         return !bfs.getPathToDestination().isEmpty();
     }
+
+    private boolean isAntInEnemyBaseArea() {
+        if (enemyBaseGraphName != -1) {
+            int[] enemyBaseXY = Utils.getCoordinatesFromName(enemyBaseGraphName);
+            int distance = Math.abs(positionX - enemyBaseXY[0]) + Math.abs(positionY - enemyBaseXY[1]);
+            return distance <= 6;
+        } else return false;
+    }
+
 }
