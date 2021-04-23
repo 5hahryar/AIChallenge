@@ -6,6 +6,7 @@ import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
 import client.model.Cell;
+import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 import jdk.jshell.execution.Util;
@@ -117,7 +118,7 @@ public class MyKargar {
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         messages = new ArrayList<>();
         if (exploreAgent == null) {
-            exploreAgent = new ExploreAgent(world);
+            exploreAgent = new ExploreAgent(world, AntType.KARGAR);
         }
     }
 

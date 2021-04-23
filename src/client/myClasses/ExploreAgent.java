@@ -3,6 +3,7 @@ package client.myClasses;
 import client.World;
 import client.model.Answer;
 import client.model.Cell;
+import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
@@ -19,7 +20,10 @@ public class ExploreAgent implements AIAgent {
 
     Cell[][] cells;
 
-    public ExploreAgent(World world) {
+    private AntType antType;
+
+    public ExploreAgent(World world, AntType antType) {
+        this.antType = antType;
         this.world = world;
         cells = new Cell[world.getMapWidth()][world.getMapHeight()];
         for (int i = 0; i < world.getMapWidth(); i++) {
@@ -78,7 +82,7 @@ public class ExploreAgent implements AIAgent {
         for (int i = 0; i < 4; i++) {
             result.add(getCell(c.getXCoordinate() + dxs[i], c.getYCoordinate() + dys[i]));
         }
-//        Collections.shuffle(result);
+        if (antType == AntType.KARGAR) Collections.shuffle(result);
         return result;
     }
 
