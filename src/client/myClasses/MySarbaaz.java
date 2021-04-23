@@ -25,7 +25,8 @@ public class MySarbaaz {
     private static final int MESSAGE_VALUE_BASE = 10;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
-    private static final AdjList graph = new AdjList(10000, false);
+    //hardcode
+    private static final AdjList graph = new AdjList(5000, false);
 
     private int positionX;
     private int positionY;
