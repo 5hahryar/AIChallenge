@@ -5,7 +5,9 @@ import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
+import client.model.Ant;
 import client.model.Cell;
+import client.model.enums.AntTeam;
 import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
@@ -22,7 +24,7 @@ public class MySarbaaz {
     private static final int MESSAGE_VALUE_RESOURCE = 5;
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
-    private static final int MESSAGE_VALUE_BASE = 10;
+    private static final int MESSAGE_VALUE_ENEMYBASE = 10;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
     //hardcode
@@ -38,6 +40,7 @@ public class MySarbaaz {
     private MyNode targetNode;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
+    private boolean isAlliedSarbaazInSight;
 
     public Answer turn(World world, int turn) {
         //Initialize values
@@ -53,6 +56,7 @@ public class MySarbaaz {
 
         broadcastResources();
         broadcastMap();
+        broadcastEnemyBase();
 
         MyMessage message = getMessage();
 
@@ -67,6 +71,7 @@ public class MySarbaaz {
         baseX = world.getBaseX();
         baseY = world.getBaseY();
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
+        isAlliedSarbaazInSight = false;
         messages = new ArrayList<>();
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world, AntType.SARBAAZ);
@@ -92,7 +97,7 @@ public class MySarbaaz {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                     }
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
-                        addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
+                        enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
                     }
                     //remove node from nodesWithResources if it's resource value is below 1
                     else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
@@ -100,6 +105,14 @@ public class MySarbaaz {
                             targetNode = null;
                         }
                         nodesWithResources.removeIf(node -> node.getGraphName() == Utils.getNodeNameFromCell(neighbor));
+                    }
+                    if (!neighbor.getAnts().isEmpty()) {
+                        for (Ant ant : neighbor.getAnts()) {
+                            if (ant.getType() == AntType.SARBAAZ && ant.getTeam() == AntTeam.ALLIED) {
+                                isAlliedSarbaazInSight = true;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -291,6 +304,13 @@ public class MySarbaaz {
             m += "r";
         }
         if (!m.isEmpty()) addMessage(new MyMessage(m, MESSAGE_VALUE_RESOURCE));
+    }
+
+    private void broadcastEnemyBase() {
+        if (enemyBaseGraphName != -1) {
+            String m = "*B:" + enemyBaseGraphName + "b";
+            addMessage(new MyMessage(m, MESSAGE_VALUE_ENEMYBASE));
+        }
     }
 
     private void listenToMapMessage(World world) {
