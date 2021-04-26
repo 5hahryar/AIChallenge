@@ -25,14 +25,6 @@ public class Utils {
         if (rand == 2) return Direction.RIGHT;
         if (rand == 3) return Direction.LEFT;
         return Direction.CENTER;
-
-//        return switch (new Random().nextInt(4)) {
-//            case 0 -> Direction.UP;
-//            case 1 -> Direction.DOWN;
-//            case 2 -> Direction.RIGHT;
-//            case 3 -> Direction.LEFT;
-//            default -> Direction.CENTER;
-//        };
     }
 
     public static int getNodeNameFromCoordinates(int x, int y) {

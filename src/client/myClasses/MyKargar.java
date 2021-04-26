@@ -32,7 +32,6 @@ public class MyKargar {
     private int turn;
     private ArrayList<MyNode> nodesWithResources = new ArrayList<>();
     private MyNode targetNode;
-    private MyNode persistentTarget;
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
@@ -136,17 +135,19 @@ public class MyKargar {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    // set value to enemy base graph name
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
                     }
-                    //add cell to nodes with resources
+                    // add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                     }
+                    // add enemy base message
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
                     }
-                    //remove node from nodesWithResources if it's resource value is below 1
+                    // remove node from nodesWithResources if it's resource value is below 1
                     else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         if (targetNode != null && targetNode.getGraphName() == Utils.getNodeNameFromCell(neighbor)) {
                             targetNode = null;
@@ -204,18 +205,14 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
+        // sort nodesWithResources based on distance
         nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
-
-//        if (enemyBaseGraphName != -1 && isAntInEnemyBaseArea()) {
-//            persistentTarget = new MyNode(baseGraphName, baseX, baseY);
-//        }
+        // nullify target if in at target
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
+        // nullify target if at base
         if (positionX == baseX && positionY == baseY) {
             targetNode = null;
         }
-//        if (persistentTarget != null && positionGraphName == persistentTarget.getGraphName()) {
-//            persistentTarget = null;
-//        }
 
         //return to base if ant holds resources ELSE get another direction
         if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
@@ -227,94 +224,24 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-//        if (persistentTarget != null) {
-//            return getDirectionToNode(world, persistentTarget.getGraphName());
-//        }
-        //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
-            //choose a target randomly, and null it if in base
-
+            // choose first node in list as target
             if (targetNode == null) targetNode = nodesWithResources.get(0);
-            //null target if we are in it
-
             if (targetNode != null) {
+                // go to target if there is a path to it, otherwise nullify it
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
-                } else targetNode = null;
+                }
+                else targetNode = null;
             }
         }
+        // explore agent
         if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
 
         }
-//        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-//        Direction optimumDirection = findOptimumDirection(availableDirections, world);
         return Direction.CENTER;
-    }
-
-    /**
-     * @param world
-     * @return available directions to move as MyDirection object
-     */
-    private ArrayList<MyDirection> getAvailableDirections(World world) {
-        ArrayList<MyDirection> availableDirections = new ArrayList<>();
-
-        //get cell info of 4 main directions
-        Cell up = world.getAnt().getNeighborCell(0, -1);
-        Cell down = world.getAnt().getNeighborCell(0, 1);
-        Cell right = world.getAnt().getNeighborCell(1, 0);
-        Cell left = world.getAnt().getNeighborCell(-1, 0);
-
-        //if direction is not wall and in reach(not to the other side of map)
-        //then add to list of available directions and the graph
-        if (up != null && up.getType() != CellType.WALL && Utils.isCellInMovingBounds(up, world)) {
-            availableDirections.add(new MyDirection(Direction.UP, up));
-            addEdgeToGraph(Utils.getNodeNameFromCell(up), positionGraphName);
-        }
-        if (down != null && down.getType() != CellType.WALL && Utils.isCellInMovingBounds(down, world)) {
-            availableDirections.add(new MyDirection(Direction.DOWN, down));
-            addEdgeToGraph(Utils.getNodeNameFromCell(down), positionGraphName);
-        }
-        if (right != null && right.getType() != CellType.WALL && Utils.isCellInMovingBounds(right, world)) {
-            availableDirections.add(new MyDirection(Direction.RIGHT, right));
-            addEdgeToGraph(Utils.getNodeNameFromCell(right), positionGraphName);
-        }
-        if (left != null && left.getType() != CellType.WALL && Utils.isCellInMovingBounds(left, world)) {
-            availableDirections.add(new MyDirection(Direction.LEFT, left));
-            addEdgeToGraph(Utils.getNodeNameFromCell(left), positionGraphName);
-        }
-
-        return availableDirections;
-    }
-
-    /**
-     * @param availableDirections
-     * @return next optimum direction to move
-     */
-    private Direction findOptimumDirection(ArrayList<MyDirection> availableDirections, World world) {
-        //sort available directions based on their resource value MAX .... MIN
-        availableDirections.sort(new Comparator<>() {
-            @Override
-            public int compare(MyDirection o1, MyDirection o2) {
-                return Integer.compare(o2.getCell().getResource().getValue(), o1.getCell().getResource().getValue());
-            }
-        });
-
-        //if there are no directions with resources, take the previous direction if available, if not pick one randomly
-        if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
-            //add node to list of nodes with resources
-            if (!nodesWithResourcesContains(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()))) {
-                nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()), availableDirections.get(0).getCell()));
-            }
-            return availableDirections.get(0).getDirection();
-        }
-        else {
-            for (MyDirection direction : availableDirections) {
-                if (direction.getDirection() == prevDirection) return direction.getDirection();
-            }
-            return availableDirections.get(new Random().nextInt(availableDirections.size())).getDirection();
-        }
     }
 
     /**

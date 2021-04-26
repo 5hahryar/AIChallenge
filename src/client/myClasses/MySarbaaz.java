@@ -23,9 +23,8 @@ public class MySarbaaz {
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
     private static final int MESSAGE_VALUE_BASE = 10;
-    private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
-    //hardcode
+    //#hardcode
     private static final AdjList graph = new AdjList(5000, false);
 
     private int positionX;
@@ -91,6 +90,7 @@ public class MySarbaaz {
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                     }
+                    //add enemy base message
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
                     }
@@ -147,15 +147,19 @@ public class MySarbaaz {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionSarbaaz(World world) {
+        // sort nodesWithResources based on distance
         nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
-
+        //attack enemy base if it has been found
         if (enemyBaseGraphName != -1) {
             return getDirectionToNode(world, enemyBaseGraphName);
         }
+        // if resource target is empty, nullify it
+        // don't move if it has resources
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) {
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
             else return Direction.CENTER;
         }
+        // nullify target if at base
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
             targetNode = null;
         }
@@ -169,32 +173,29 @@ public class MySarbaaz {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-        //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
-            //choose a target randomly, and null it if in base
-
+            //choose a random target
             if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
-            //null target if we are in it
-
             if (targetNode != null) {
+                // go to target if there is a path to it, otherwise nullify it
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
-                } else targetNode = null;
+                }
+                else targetNode = null;
             }
         }
+        // explore agent
         if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
 
         }
-//        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-//        Direction optimumDirection = findOptimumDirection(availableDirections, world);
         return Direction.CENTER;
     }
 
     /**
      * @param world
-     * @return next direction in order to go to base
+     * @return next direction in order to go to target
      */
     private Direction getDirectionToNode(World world, int nodeName) {
         //get cell info of 4 main directions
@@ -208,6 +209,7 @@ public class MySarbaaz {
         int downGraphName = -1;
         int rightGraphName = -1;
         int leftGraphName = -1;
+        //TODO: check for mirror support in this function (ex: up getting -1 as coordinate?)
 
         //populate node names in format: XXYY
         if (up != null) upGraphName = Utils.getNodeNameFromCell(up);
