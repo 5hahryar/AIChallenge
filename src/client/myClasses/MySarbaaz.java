@@ -8,6 +8,7 @@ import client.model.Answer;
 import client.model.Ant;
 import client.model.Cell;
 import client.model.enums.AntTeam;
+import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
 
@@ -23,9 +24,9 @@ public class MySarbaaz {
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
     private static final int MESSAGE_VALUE_BASE = 10;
-    private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
-    private static final AdjList graph = new AdjList(10000, false);
+    //#hardcode
+    private static final AdjList graph = new AdjList(5000, false);
 
     private int positionX;
     private int positionY;
@@ -72,7 +73,7 @@ public class MySarbaaz {
         lootAmountInArea = 0;
         isEnemyInSight = false;
         if (exploreAgent == null) {
-            exploreAgent = new ExploreAgent(world);
+            exploreAgent = new ExploreAgent(world, AntType.SARBAAZ);
         }
     }
 
@@ -106,6 +107,7 @@ public class MySarbaaz {
                             nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                         }
                     }
+                    //add enemy base message
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
                     }
@@ -180,6 +182,7 @@ public class MySarbaaz {
             }
             else return Direction.CENTER;
         }
+        // nullify target if at base
         if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
             targetNode = null;
         }
@@ -193,30 +196,29 @@ public class MySarbaaz {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-        //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             //choose a target randomly from nodesWithRes
             if (targetNode == null) targetNode = nodesWithResources.get(0);
-
             if (targetNode != null) {
+                // go to target if there is a path to it, otherwise nullify it
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
-                } else targetNode = null;
+                }
+                else targetNode = null;
             }
         }
+        // explore agent
         if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
 
         }
-//        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-//        Direction optimumDirection = findOptimumDirection(availableDirections, world);
         return Direction.CENTER;
     }
 
     /**
      * @param world
-     * @return next direction in order to go to base
+     * @return next direction in order to go to target
      */
     private Direction getDirectionToNode(World world, int nodeName) {
         //get cell info of 4 main directions
@@ -230,6 +232,7 @@ public class MySarbaaz {
         int downGraphName = -1;
         int rightGraphName = -1;
         int leftGraphName = -1;
+        //TODO: check for mirror support in this function (ex: up getting -1 as coordinate?)
 
         //populate node names in format: XXYY
         if (up != null) upGraphName = Utils.getNodeNameFromCell(up);

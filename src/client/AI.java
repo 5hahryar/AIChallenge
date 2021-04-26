@@ -30,19 +30,17 @@ public class AI {
     private static boolean isLogFileCreated = false;
 
     public Answer turn(World world) {
-        if (!isLogFileCreated) {
+//        if (!isLogFileCreated) {
 //            Utils.createLog();
-            isLogFileCreated = true;
-        }
+//            isLogFileCreated = true;
+//        }
+
         // Enter your AI code here
         AI.turn++;
         message = "";
 
         //get next direction for unit based on it's type
-        Direction nextMoveDirection;
         if (world.getAnt().getType() == AntType.KARGAR) {
-//            System.out.println("turn:" + turn);
-//            System.out.println("*******");
             return myKargar.turn(world, turn);
         }
         else return mySarbaaz.turn(world, turn);

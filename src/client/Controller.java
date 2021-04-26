@@ -155,7 +155,6 @@ public class Controller {
                 long diff = System.currentTimeMillis() - start;
                 if (diff > 2000) {
                     // ignore
-                } else if (diff > 500) {
                     sendResult(new Answer(Direction.CENTER));
                 } else {
                     sendResult(answer);

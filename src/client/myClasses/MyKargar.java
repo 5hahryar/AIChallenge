@@ -11,6 +11,7 @@ import client.model.enums.AntTeam;
 import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
+import jdk.jshell.execution.Util;
 
 import java.util.*;
 
@@ -61,10 +62,11 @@ public class MyKargar {
 //        if (targetNode != null) {
 //            System.out.println("target: " + targetNode.getX() + "," + targetNode.getY() + " name: " + targetNode.getGraphName());
 //        }
-//        if (!nodesWithResources.isEmpty()) {
+//        if (!nodesWithResources.isEmpty() && Utils.getNodeNameFromCoordinates(positionX, positionY) == baseGraphName) {
 //            System.out.println("nodes with res: ");
 //            for (MyNode node : nodesWithResources) {
-//                System.out.print(node.getGraphName() + "/");
+//                int[] c = Utils.getCoordinatesFromName(node.getGraphName());
+//                System.out.print(c[0] + "," + c[1] + "/");
 //            }
 //            System.out.println("");
 //        }
@@ -119,7 +121,7 @@ public class MyKargar {
         isEnemySarbaazInSight = false;
         messages = new ArrayList<>();
         if (exploreAgent == null) {
-            exploreAgent = new ExploreAgent(world);
+            exploreAgent = new ExploreAgent(world, AntType.KARGAR);
         }
     }
 
@@ -147,13 +149,19 @@ public class MyKargar {
                         }
                     }
                     //add cell to nodes with resources
+                    // set value to enemy base graph name
+                    if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
+                        enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
+                    }
+                    // add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
                     }
+                    // add enemy base message
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         addMessage(new MyMessage("*B:" + Utils.getNodeNameFromCell(neighbor) + "b", MESSAGE_VALUE_BASE));
                     }
-                    //remove node from nodesWithResources if it's resource value is below 1
+                    // remove node from nodesWithResources if it's resource value is below 1
                     else if (neighbor.getResource().getValue() <= 0 && nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         if (targetNode != null && targetNode.getGraphName() == Utils.getNodeNameFromCell(neighbor)) {
                             targetNode = null;
@@ -174,6 +182,11 @@ public class MyKargar {
             int riY = neighbor.getYCoordinate();
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
+
+            if (upY < 0) upY = world.getMapHeight() + upY;
+            if (leX < 0) leX = world.getMapWidth() + upY;
+            if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
+            if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
 
             //find the up,down,right.left neighbor cells and add edge from neighbor to them, into the graph
             for (Cell relative : neighborCells) {
@@ -239,7 +252,6 @@ public class MyKargar {
      * @return next direction to move (the optimum one)
      */
     private Direction getNextMoveDirection(World world) {
-        //if nodes with resources isn't empty go to first node in that list
         if (!nodesWithResources.isEmpty()) {
             //choose target if it's null
             if (targetNode == null) targetNode = nodesWithResources.get(0);
@@ -251,7 +263,8 @@ public class MyKargar {
                 }
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
-                } else targetNode = null;
+                }
+                else targetNode = null;
             }
         }
         //go explore if none of the conditions above are met and we have no target
@@ -260,73 +273,7 @@ public class MyKargar {
             return exploreAgent.turn(world).getDirection();
 
         }
-//        ArrayList<MyDirection> availableDirections = getAvailableDirections(world);
-//        Direction optimumDirection = findOptimumDirection(availableDirections, world);
         return Direction.CENTER;
-    }
-
-    /**
-     * @param world
-     * @return available directions to move as MyDirection object
-     */
-    private ArrayList<MyDirection> getAvailableDirections(World world) {
-        ArrayList<MyDirection> availableDirections = new ArrayList<>();
-
-        //get cell info of 4 main directions
-        Cell up = world.getAnt().getNeighborCell(0, -1);
-        Cell down = world.getAnt().getNeighborCell(0, 1);
-        Cell right = world.getAnt().getNeighborCell(1, 0);
-        Cell left = world.getAnt().getNeighborCell(-1, 0);
-
-        //if direction is not wall and in reach(not to the other side of map)
-        //then add to list of available directions and the graph
-        if (up != null && up.getType() != CellType.WALL && Utils.isCellInMovingBounds(up, world)) {
-            availableDirections.add(new MyDirection(Direction.UP, up));
-            addEdgeToGraph(Utils.getNodeNameFromCell(up), positionGraphName);
-        }
-        if (down != null && down.getType() != CellType.WALL && Utils.isCellInMovingBounds(down, world)) {
-            availableDirections.add(new MyDirection(Direction.DOWN, down));
-            addEdgeToGraph(Utils.getNodeNameFromCell(down), positionGraphName);
-        }
-        if (right != null && right.getType() != CellType.WALL && Utils.isCellInMovingBounds(right, world)) {
-            availableDirections.add(new MyDirection(Direction.RIGHT, right));
-            addEdgeToGraph(Utils.getNodeNameFromCell(right), positionGraphName);
-        }
-        if (left != null && left.getType() != CellType.WALL && Utils.isCellInMovingBounds(left, world)) {
-            availableDirections.add(new MyDirection(Direction.LEFT, left));
-            addEdgeToGraph(Utils.getNodeNameFromCell(left), positionGraphName);
-        }
-
-        return availableDirections;
-    }
-
-    /**
-     * @param availableDirections
-     * @return next optimum direction to move
-     */
-    private Direction findOptimumDirection(ArrayList<MyDirection> availableDirections, World world) {
-        //sort available directions based on their resource value MAX .... MIN
-        availableDirections.sort(new Comparator<>() {
-            @Override
-            public int compare(MyDirection o1, MyDirection o2) {
-                return Integer.compare(o2.getCell().getResource().getValue(), o1.getCell().getResource().getValue());
-            }
-        });
-
-        //if there are no directions with resources, take the previous direction if available, if not pick one randomly
-        if (availableDirections.get(0).getCell().getResource().getValue() > 0) {
-            //add node to list of nodes with resources
-            if (!nodesWithResourcesContains(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()))) {
-                nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(availableDirections.get(0).getCell()), availableDirections.get(0).getCell()));
-            }
-            return availableDirections.get(0).getDirection();
-        }
-        else {
-            for (MyDirection direction : availableDirections) {
-                if (direction.getDirection() == prevDirection) return direction.getDirection();
-            }
-            return availableDirections.get(new Random().nextInt(availableDirections.size())).getDirection();
-        }
     }
 
     /**
@@ -382,7 +329,9 @@ public class MyKargar {
      */
     private void addEdgeToGraph(int src, int dest) {
             graph.addEdge(src, dest);
-//            System.out.println("edge added : " + src + ">" +dest);
+//            int[] cs = Utils.getCoordinatesFromName(src);
+//            int[] cd = Utils.getCoordinatesFromName(dest);
+//            System.out.println("edge added : " + cs[0] + "," + cs[1] + ">" + cd[0] + "," + cd[1] );
     }
 
     private void addMessage(MyMessage message) {
@@ -481,4 +430,13 @@ public class MyKargar {
         bfs.findShortestPath(positionGraphName, target);
         return !bfs.getPathToDestination().isEmpty();
     }
+
+    private boolean isAntInEnemyBaseArea() {
+        if (enemyBaseGraphName != -1) {
+            int[] enemyBaseXY = Utils.getCoordinatesFromName(enemyBaseGraphName);
+            int distance = Math.abs(positionX - enemyBaseXY[0]) + Math.abs(positionY - enemyBaseXY[1]);
+            return distance <= 6;
+        } else return false;
+    }
+
 }
