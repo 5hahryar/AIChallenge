@@ -114,14 +114,14 @@ public class Utils {
         allChats = sortChatOnTurn(allChats);
         if (!allChats.isEmpty()) {
             String lastChat = allChats.get(0).getText();
-            if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
-                int codeIndex = lastChat.indexOf("*M:");
-                if (lastChat.contains("*R:")) {
+            if (!lastChat.isEmpty() && lastChat.contains("M")) {
+                int codeIndex = lastChat.indexOf("M");
+                if (lastChat.contains("R")) {
                     lastChat = lastChat.substring(codeIndex, lastChat.indexOf('m'));
                 }
-                codeIndex = lastChat.indexOf("*M:");
+                codeIndex = lastChat.indexOf("M");
                 int nextIndex = lastChat.indexOf(',');
-                int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+3, nextIndex));
+                int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex+1, nextIndex));
                 data.add(srcNodeName);
 
                 lastChat = lastChat.substring(nextIndex+1);
@@ -153,14 +153,14 @@ public class Utils {
             for (Chat chat : chats) {
                 ArrayList<Integer> nodeEdges = new ArrayList<>();
                 String lastChat = chat.getText();
-                if (!lastChat.isEmpty() && lastChat.contains("*M:")) {
-                    int codeIndex = lastChat.indexOf("*M:");
-                    if (lastChat.contains("*R:")) {
+                if (!lastChat.isEmpty() && lastChat.contains("M")) {
+                    int codeIndex = lastChat.indexOf("M");
+                    if (lastChat.contains("R")) {
                         lastChat = lastChat.substring(codeIndex, lastChat.indexOf('m'));
                     }
-                    codeIndex = lastChat.indexOf("*M:");
+                    codeIndex = lastChat.indexOf("M");
                     int nextIndex = lastChat.indexOf(',');
-                    int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex + 3, nextIndex));
+                    int srcNodeName = Integer.parseInt(lastChat.substring(codeIndex + 1, nextIndex));
                     nodeEdges.add(srcNodeName);
 
                     lastChat = lastChat.substring(nextIndex + 1);
@@ -183,14 +183,14 @@ public class Utils {
         allChats = sortChatOnTurn(allChats);
         if (!allChats.isEmpty()) {
             String lastChat = allChats.get(0).getText();
-            if (!lastChat.isEmpty() && lastChat.contains("*R:")) {
-                int codeIndex = lastChat.indexOf("*R:");
-                if (lastChat.contains("*M:")) {
+            if (!lastChat.isEmpty() && lastChat.contains("R")) {
+                int codeIndex = lastChat.indexOf("R");
+                if (lastChat.contains("M")) {
                     lastChat = lastChat.substring(codeIndex, lastChat.indexOf('r'));
                 }
-                codeIndex = lastChat.indexOf("*R:");
+                codeIndex = lastChat.indexOf("R");
                 int nextIndex = lastChat.indexOf(',');
-                lastChat = lastChat.substring(codeIndex+3);
+                lastChat = lastChat.substring(codeIndex+1);
                 while (lastChat.contains(",")) {
                     int node = Integer.parseInt(lastChat.substring(0, lastChat.indexOf(',')));
                     data.add(node);
@@ -208,10 +208,10 @@ public class Utils {
         allChats = sortChatOnTurn(allChats);
         if (!allChats.isEmpty()) {
             String lastChat = allChats.get(0).getText();
-            if (!lastChat.isEmpty() && lastChat.contains("*B:")) {
-                int codeIndex = lastChat.indexOf("*B:");
+            if (!lastChat.isEmpty() && lastChat.contains("B")) {
+                int codeIndex = lastChat.indexOf("B");
                 int endIndex = lastChat.indexOf('b');
-                lastChat = lastChat.substring(codeIndex+3, endIndex);
+                lastChat = lastChat.substring(codeIndex+1, endIndex);
                 data = Integer.parseInt(lastChat);
             }
         }
@@ -246,4 +246,8 @@ public class Utils {
     }
 
 
+    public static boolean isCellInSight(int[] positionXY, int[] targetXY, World world) {
+        return Math.abs(positionXY[0] - targetXY[0]) +
+                Math.abs(positionXY[1] - targetXY[1]) <= world.getAnt().getViewDistance();
+    }
 }

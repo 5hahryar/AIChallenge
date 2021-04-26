@@ -5,7 +5,9 @@ import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
+import client.model.Ant;
 import client.model.Cell;
+import client.model.enums.AntTeam;
 import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
@@ -35,6 +37,7 @@ public class MyKargar {
     private ExploreAgent exploreAgent;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
+    private boolean isEnemySarbaazInSight;
 
     public MyKargar() { }
 
@@ -115,6 +118,7 @@ public class MyKargar {
         baseY = world.getBaseY();
         positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
+        isEnemySarbaazInSight = false;
         messages = new ArrayList<>();
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world, AntType.KARGAR);
@@ -135,6 +139,16 @@ public class MyKargar {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    //is enemy in cell
+                    if (!neighbor.getAnts().isEmpty()){
+                        for (Ant ant : neighbor.getAnts()) {
+                            if (ant.getType() == AntType.SARBAAZ && ant.getTeam() == AntTeam.ENEMY) {
+                                isEnemySarbaazInSight = true;
+                                break;
+                            }
+                        }
+                    }
+                    //add cell to nodes with resources
                     // set value to enemy base graph name
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
@@ -205,18 +219,32 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        // sort nodesWithResources based on distance
-        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
-        // nullify target if in at target
+        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+
+        //if enemy based has been found, go to it
+        if (enemyBaseGraphName != -1) {
+            return getDirectionToNode(world, baseGraphName);
+        }
+        //if we are at target, nullify it
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) targetNode = null;
-        // nullify target if at base
-        if (positionX == baseX && positionY == baseY) {
+        //if we are at base, nullify target
+        if (positionX == world.getBaseX() && positionY == world.getBaseY()) {
             targetNode = null;
         }
 
         //return to base if ant holds resources ELSE get another direction
-        if (world.getAnt().getCurrentResource().getValue() > 0) return getDirectionToNode(world, baseGraphName);
-        else return getNextMoveDirection(world);
+        //if holding below 6 resources go for next res if no enemy is visible
+        //and target is in sight
+        int holdingResAmount = world.getAnt().getCurrentResource().getValue();
+        if (holdingResAmount > 6) return getDirectionToNode(world, baseGraphName);
+        else if (!isEnemySarbaazInSight && !nodesWithResources.isEmpty()) {
+            int[] positionXY = new int[]{positionX, positionY};
+            int[] targetXY = new int[]{nodesWithResources.get(0).getX(), nodesWithResources.get(0).getY()};
+            if (Utils.isCellInSight(positionXY, targetXY, world)) {
+                return getDirectionToNode(world, nodesWithResources.get(0).getGraphName());
+            }
+        }
+        return getNextMoveDirection(world);
     }
 
     /**
@@ -225,17 +253,21 @@ public class MyKargar {
      */
     private Direction getNextMoveDirection(World world) {
         if (!nodesWithResources.isEmpty()) {
-            // choose first node in list as target
+            //choose target if it's null
             if (targetNode == null) targetNode = nodesWithResources.get(0);
+            //go to target if there is a path to it, otherwise nullify it
             if (targetNode != null) {
-                // go to target if there is a path to it, otherwise nullify it
+                //if target is different from first nodeWithRes, change it
+                if (targetNode.getGraphName() != nodesWithResources.get(0).getGraphName()) {
+                    targetNode = nodesWithResources.get(0);
+                }
                 if (isTherePathToNode(targetNode.getGraphName())) {
                     return getDirectionToNode(world, targetNode.getGraphName());
                 }
                 else targetNode = null;
             }
         }
-        // explore agent
+        //go explore if none of the conditions above are met and we have no target
         if (targetNode == null) {
 //            System.out.println("EXPLORE");
             return exploreAgent.turn(world).getDirection();
@@ -326,7 +358,7 @@ public class MyKargar {
         String m = "";
         LinkedList<Integer> edges = graph.getEdges(Utils.getNodeNameFromCoordinates(positionX, positionY));
         if (edges != null && !edges.isEmpty()) {
-            m += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
+            m += "M" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
             for (int edgeName : edges) {
                 if (!m.contains(String.valueOf(edgeName))) m += edgeName + ",";
             }
@@ -338,7 +370,7 @@ public class MyKargar {
     private void broadcastResources() {
         String m = "";
         if (nodesWithResources != null && !nodesWithResources.isEmpty()) {
-            m += "*R:";
+            m += "R";
             for (MyNode node : nodesWithResources) {
                 m += node.getGraphName() + ",";
             }

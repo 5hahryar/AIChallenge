@@ -5,7 +5,9 @@ import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
 import client.model.Answer;
+import client.model.Ant;
 import client.model.Cell;
+import client.model.enums.AntTeam;
 import client.model.enums.AntType;
 import client.model.enums.CellType;
 import client.model.enums.Direction;
@@ -13,7 +15,6 @@ import client.model.enums.Direction;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Random;
 
 public class MySarbaaz {
 
@@ -37,6 +38,8 @@ public class MySarbaaz {
     private MyNode targetNode;
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
+    private int lootAmountInArea;
+    private boolean isEnemyInSight;
 
     public Answer turn(World world, int turn) {
         //Initialize values
@@ -56,7 +59,7 @@ public class MySarbaaz {
         MyMessage message = getMessage();
 
         isNewBorn = false;
-        return new Answer(nextMoveDirectionSarbaaz(world), "", 0);
+        return new Answer(nextMoveDirection, message.getMessage(), message.getValue());
     }
 
     private void initValues(World world) {
@@ -67,6 +70,8 @@ public class MySarbaaz {
         baseY = world.getBaseY();
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         messages = new ArrayList<>();
+        lootAmountInArea = 0;
+        isEnemyInSight = false;
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world, AntType.SARBAAZ);
         }
@@ -86,9 +91,21 @@ public class MySarbaaz {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
                 if (neighbor != null && neighbor.getType() != CellType.WALL) {
                     neighborCells.add(neighbor);
+                    //is enemy in cell
+                    if (!neighbor.getAnts().isEmpty()){
+                        for (Ant ant : neighbor.getAnts()) {
+                            if (ant.getTeam() == AntTeam.ENEMY) {
+                                isEnemyInSight = true;
+                                break;
+                            }
+                        }
+                    }
                     //add cell to nodes with resources
-                    if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
-                        nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
+                    if (neighbor.getResource().getValue() > 0) {
+                        lootAmountInArea += neighbor.getResource().getValue();
+                        if (!nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
+                            nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
+                        }
                     }
                     //add enemy base message
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
@@ -147,16 +164,22 @@ public class MySarbaaz {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionSarbaaz(World world) {
-        // sort nodesWithResources based on distance
-        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
-        //attack enemy base if it has been found
-        if (enemyBaseGraphName != -1) {
+        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+
+        //if enemy based has been found and there is a path to it, go for it
+        if (enemyBaseGraphName != -1 && isTherePathToNode(enemyBaseGraphName)) {
             return getDirectionToNode(world, enemyBaseGraphName);
         }
-        // if resource target is empty, nullify it
-        // don't move if it has resources
+        //if we are at target ...
         if (targetNode != null && positionX == targetNode.getX() && positionY == targetNode.getY()) {
+            //if we are at target and it has no resources, nullify it
             if (world.getAnt().getLocationCell().getResource().getValue() == 0) targetNode = null;
+            //if total area res amount is below 100 and no enemy in sight, nullify target
+            if (lootAmountInArea < 100 && !isEnemyInSight) {
+                //this is to make sure that the same target doesn't get picked in this turn
+                nodesWithResources.remove(targetNode);
+                targetNode = null;
+            }
             else return Direction.CENTER;
         }
         // nullify target if at base
@@ -174,8 +197,8 @@ public class MySarbaaz {
      */
     private Direction getNextMoveDirection(World world) {
         if (!nodesWithResources.isEmpty()) {
-            //choose a random target
-            if (targetNode == null) targetNode = nodesWithResources.get(new Random().nextInt(nodesWithResources.size()));
+            //choose a target randomly from nodesWithRes
+            if (targetNode == null) targetNode = nodesWithResources.get(0);
             if (targetNode != null) {
                 // go to target if there is a path to it, otherwise nullify it
                 if (isTherePathToNode(targetNode.getGraphName())) {
@@ -274,7 +297,7 @@ public class MySarbaaz {
         String m = "";
         LinkedList<Integer> edges = graph.getEdges(Utils.getNodeNameFromCoordinates(positionX, positionY));
         if (edges != null && !edges.isEmpty()) {
-            m += "*M:" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
+            m += "M" + Utils.getNodeNameFromCoordinates(positionX, positionY) + ",";
             for (int edgeName : edges) {
                 if (!m.contains(String.valueOf(edgeName))) m += edgeName + ",";
             }
@@ -286,7 +309,7 @@ public class MySarbaaz {
     private void broadcastResources() {
         String m = "";
         if (nodesWithResources != null && !nodesWithResources.isEmpty()) {
-            m += "*R:";
+            m += "R";
             for (MyNode node : nodesWithResources) {
                 m += node.getGraphName() + ",";
             }
