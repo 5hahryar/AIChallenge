@@ -23,7 +23,7 @@ public class MyKargar {
     private static final int MESSAGE_VALUE_BASE = 10;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
-    private static final AdjList graph = new AdjList(10000, false);
+    private static final AdjList graph = new AdjList(5000, false);
 
     private int positionX;
     private int positionY;
@@ -70,41 +70,11 @@ public class MyKargar {
 //            }
 //            System.out.println("");
 //        }
+//        System.out.println("Direction: " + nextMoveDirection);
 //        System.out.println("**************** \n");
-
-
-//        if (prevDirection == null) prevDirection = getRandomDirection();
-
-//        System.out.println("turn: " + turn);
-
-
 //
-//
-
-
-
-
-
-
-//        prevDirection = nextMoveDirection;
-
-
-//        System.out.println("nodeswithres:" + nodesWithResources.toString());
-//        System.out.println("");
-//        System.out.println("nodes with res:");
-//        for (MyNode node: nodesWithResources) {
-//            System.out.print(node.getGraphName() + "/");
-//        }
-//        if (targetNode != null) System.out.println("target:" + targetNode.getGraphName());
-//        System.out.println("pos name : " + Utils.getNodeNameFromCell(world.getAnt().getLocationCell()));
-
-
-
-//        System.out.println("direction" + nextMoveDirection);
-//        System.out.println("message: " + message.getMessage());
-
 //        if (nextMoveDirection == Direction.CENTER) {
-//            Utils.writeLog("CENTER :: target" + targetNode + ", res" + nodesWithResources.size() + "\n");
+//            addMessage(new MyMessage("center" , 11));
 //        }
 
         isNewBorn = false;
@@ -183,8 +153,9 @@ public class MyKargar {
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
 
+            //TODO: for sarbaz do this also
             if (upY < 0) upY = world.getMapHeight() + upY;
-            if (leX < 0) leX = world.getMapWidth() + upY;
+            if (leX < 0) leX = world.getMapWidth() + leX;
             if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
             if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
 
@@ -219,7 +190,7 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
         //if enemy based has been found, go to it
         if (enemyBaseGraphName != -1) {
@@ -262,15 +233,20 @@ public class MyKargar {
                     targetNode = nodesWithResources.get(0);
                 }
                 if (isTherePathToNode(targetNode.getGraphName())) {
+                    //TODO:check other nodes with resources
                     return getDirectionToNode(world, targetNode.getGraphName());
                 }
-                else targetNode = null;
+                else {
+//                    System.out.println("no path to target found, nullify target");
+                    targetNode = null;
+                }
             }
         }
         //go explore if none of the conditions above are met and we have no target
         if (targetNode == null) {
-//            System.out.println("EXPLORE");
-            return exploreAgent.turn(world).getDirection();
+            Direction exploreDir = exploreAgent.turn(world).getDirection();
+//            System.out.println("EXPLORE DIR:" + exploreDir);
+            return exploreDir;
 
         }
         return Direction.CENTER;

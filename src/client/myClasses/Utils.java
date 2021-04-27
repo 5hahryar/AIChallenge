@@ -19,6 +19,7 @@ import java.util.*;
 public class Utils {
 
     public static Direction getRandomDirection() {
+        //TODO:check for walls
         int rand = new Random().nextInt(4);
         if (rand == 0) return Direction.UP;
         if (rand == 1) return Direction.DOWN;

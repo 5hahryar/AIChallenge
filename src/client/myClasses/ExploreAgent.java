@@ -54,6 +54,9 @@ public class ExploreAgent implements AIAgent {
                 int dy = y - world.getAnt().getCurrentY();
 
                 Cell cell = world.getAnt().getVisibleMap().getRelativeCell(dx, dy);
+                if (cell != null && cell.getXCoordinate() == 1 && cell.getYCoordinate() == 17) {
+//                    System.out.println("ccceeelll:" + cell.getType());
+                }
                 if (cell != null) {
                     cells[x][y] = cell;
                 }
@@ -80,7 +83,10 @@ public class ExploreAgent implements AIAgent {
             return result;
         }
         for (int i = 0; i < 4; i++) {
-            result.add(getCell(c.getXCoordinate() + dxs[i], c.getYCoordinate() + dys[i]));
+            Cell cell = getCell(c.getXCoordinate() + dxs[i], c.getYCoordinate() + dys[i]);
+            if (cell.getType() != CellType.WALL) {
+                result.add(cell);
+            }
         }
         if (antType == AntType.KARGAR) Collections.shuffle(result);
         return result;
@@ -117,20 +123,55 @@ public class ExploreAgent implements AIAgent {
         return false;
     }
 
-    private Direction getDirectionOfXY(int x, int y) {
-        if (x < world.getAnt().getCurrentX()) {
-            return Direction.LEFT;
+    private Direction getDirectionOfXY(int x, int y, World world) {
+        int upX = world.getAnt().getXCoordinate();
+        int upY = world.getAnt().getYCoordinate() - 1;
+        int doX = world.getAnt().getXCoordinate();
+        int doY = world.getAnt().getYCoordinate() + 1;
+        int riX = world.getAnt().getXCoordinate() + 1;
+        int riY = world.getAnt().getYCoordinate();
+        int leX = world.getAnt().getXCoordinate() -1;
+        int leY = world.getAnt().getYCoordinate();
+
+        if (upY < 0) upY = world.getMapHeight() + upY;
+        if (leX < 0) leX = world.getMapWidth() + leX;
+        if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
+        if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
+
+        if (x==27 && y==17){
+//            System.out.println("");
         }
-        if (x > world.getAnt().getCurrentX()) {
-            return Direction.RIGHT;
-        }
-        if (y > world.getAnt().getCurrentY()) {
-            return Direction.DOWN;
-        }
-        if (y < world.getAnt().getCurrentY()) {
+        if (x == upX && y == upY) {
             return Direction.UP;
         }
+        if (x == doX && y == doY) {
+            return Direction.DOWN;
+        }
+        if (x == riX && y == riY) {
+            return Direction.RIGHT;
+        }
+        if (x == leX && y == leY) {
+            return Direction.LEFT;
+        }
         return null;
+
+
+
+
+        //////////////////////
+//        if (x < world.getAnt().getCurrentX()) {
+//            return Direction.LEFT;
+//        }
+//        if (x > world.getAnt().getCurrentX()) {
+//            return Direction.RIGHT;
+//        }
+//        if (y > world.getAnt().getCurrentY()) {
+//            return Direction.DOWN;
+//        }
+//        if (y < world.getAnt().getCurrentY()) {
+//            return Direction.UP;
+//        }
+//        return null;
     }
 
     @Override
@@ -139,14 +180,15 @@ public class ExploreAgent implements AIAgent {
         updateCells();
         if (!followingPath.isEmpty()) {
             XY xy = followingPath.poll();
-            return new Answer(getDirectionOfXY(xy.x, xy.y));
+//            System.out.println("explore agent XY:" + xy.x + "," + xy.y);
+            return new Answer(getDirectionOfXY(xy.x, xy.y, world));
         } else {
             if (findPathTo((cell) -> cell.getResource() == null)) {
-                System.out.println("explore map!");
+//                System.out.println("explore map!");
                 return turn(world);
             }
         }
-        return new Answer(Direction.DOWN);
+        return new Answer(Utils.getRandomDirection());
     }
 }
 

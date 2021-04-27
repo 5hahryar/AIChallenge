@@ -133,6 +133,11 @@ public class MySarbaaz {
             int leX = neighbor.getXCoordinate() -1;
             int leY = neighbor.getYCoordinate();
 
+            if (upY < 0) upY = world.getMapHeight() + upY;
+            if (leX < 0) leX = world.getMapWidth() + leX;
+            if (doY >= world.getMapHeight()) doY = world.getMapHeight() - doY;
+            if (riX >= world.getMapWidth()) riX = world.getMapWidth() - riX;
+
             //find the up,down,right.left neighbor cells and add edge from neighbor to them, into the graph
             for (Cell relative : neighborCells) {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
@@ -164,7 +169,7 @@ public class MySarbaaz {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionSarbaaz(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
 
         //if enemy based has been found and there is a path to it, go for it
         if (enemyBaseGraphName != -1 && isTherePathToNode(enemyBaseGraphName)) {

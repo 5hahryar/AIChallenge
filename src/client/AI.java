@@ -39,10 +39,15 @@ public class AI {
         AI.turn++;
         message = "";
 
-        //get next direction for unit based on it's type
-        if (world.getAnt().getType() == AntType.KARGAR) {
-            return myKargar.turn(world, turn);
+        try {
+            //get next direction for unit based on it's type
+            if (world.getAnt().getType() == AntType.KARGAR) {
+                return myKargar.turn(world, turn);
+            } else return mySarbaaz.turn(world, turn);
         }
-        else return mySarbaaz.turn(world, turn);
+        catch (Exception e) {
+//            Utils.writeLog("CENTER :: exception");
+            return new Answer(Direction.CENTER, "exception", 11);
+        }
     }
 }
