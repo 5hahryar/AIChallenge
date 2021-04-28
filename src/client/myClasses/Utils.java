@@ -4,6 +4,7 @@ import client.World;
 import client.bfs.BfsHelper;
 import client.bfs.Graph;
 import client.bfs.MyNode;
+import client.dijkstra.Dijkstra;
 import client.model.Cell;
 import client.model.Chat;
 import client.model.enums.Direction;
@@ -65,7 +66,7 @@ public class Utils {
      * sort the list of nodes with resources, by their distance to current position MIN...MAX
      * @param world
      */
-    public static ArrayList<MyNode> sortMap(World world, ArrayList<MyNode> nodesWithResources, Graph graph) {
+    public static ArrayList<MyNode> sortMap(World world, ArrayList<MyNode> nodesWithResources, Dijkstra dijkstra) {
         int positionX = world.getAnt().getXCoordinate();
         int positionY = world.getAnt().getYCoordinate();
 
@@ -75,22 +76,16 @@ public class Utils {
             nodesWithResources.sort(new Comparator<MyNode>() {
                 @Override
                 public int compare(MyNode o1, MyNode o2) {
-                    BfsHelper bfs = new BfsHelper(graph);
-                    bfs.findShortestPath(positionName, o1.getGraphName());
+                    List<String> path = dijkstra.shortestPath(String.valueOf(positionName), String.valueOf(o1.getGraphName()));
                     int o1Distance = 100;
-                    if (!bfs.getPathToDestination().isEmpty()) {
-                        o1Distance = bfs.getPathToDestination().size();
-                    } else {
-//                        System.out.print("no path : " + o1.getX() + "," + o1.getY() + "//");
+                    if (path != null) {
+                        o1Distance = path.size();
                     }
 
-                    bfs = new BfsHelper(graph);
-                    bfs.findShortestPath(positionName, o2.getGraphName());
+                    List<String> path2 = dijkstra.shortestPath(String.valueOf(positionName), String.valueOf(o2.getGraphName()));
                     int o2Distance = 100;
-                    if (!bfs.getPathToDestination().isEmpty()) {
-                        o2Distance = bfs.getPathToDestination().size();
-                    } else {
-//                        System.out.print("no path : " + o1.getX() + "," + o1.getY() + "//");
+                    if (path2 != null) {
+                        o2Distance = path2.size();
                     }
 
 

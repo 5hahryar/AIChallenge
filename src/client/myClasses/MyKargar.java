@@ -219,7 +219,7 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, dijkstra);
 
         //if enemy based has been found, go to it
         if (enemyBaseGraphName != -1) {

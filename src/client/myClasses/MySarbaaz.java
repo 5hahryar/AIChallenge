@@ -199,7 +199,7 @@ public class MySarbaaz {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionSarbaaz(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, dijkstra);
 
         //if enemy based has been found and there is a path to it, go for it
         if (enemyBaseGraphName != -1 && isTherePathToNode(enemyBaseGraphName)) {
