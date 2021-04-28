@@ -22,10 +22,9 @@ public class Utils {
         //TODO:check for walls
         int rand = new Random().nextInt(4);
         if (rand == 0) return Direction.UP;
-        if (rand == 1) return Direction.DOWN;
-        if (rand == 2) return Direction.RIGHT;
-        if (rand == 3) return Direction.LEFT;
-        return Direction.CENTER;
+        else if (rand == 1) return Direction.DOWN;
+        else if (rand == 2) return Direction.RIGHT;
+        else return Direction.LEFT;
     }
 
     public static int getNodeNameFromCoordinates(int x, int y) {
