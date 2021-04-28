@@ -107,7 +107,7 @@ public class MyKargar {
         for (int i=-viewDistance;i<=viewDistance;i++) {
             for (int j=-viewDistance;j<=world.getAnt().getViewDistance();j++) {
                 Cell neighbor = world.getAnt().getNeighborCell(i, j);
-                if (neighbor != null && neighbor.getType() != CellType.WALL) {
+                if (neighbor != null && neighbor.getType() != CellType.WALL && neighbor.getType() != CellType.TRAP) {
                     neighborCells.add(neighbor);
                     //is enemy in cell
                     if (!neighbor.getAnts().isEmpty()){
