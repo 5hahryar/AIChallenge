@@ -22,6 +22,8 @@ public class MyKargar {
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
     private static final int MESSAGE_VALUE_BASE = 10;
+    private static final int WEIGHT_SWAMP = 4;
+    private static final int WEIGHT_EMPTY = 1;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
     private static final AdjList graph = new AdjList(5000, false);
@@ -170,10 +172,10 @@ public class MyKargar {
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                         if (neighbor.getType() == CellType.SWAMP) {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 3);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
                         }
                         else {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 1);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
                         }
                     }
                 }
@@ -181,10 +183,10 @@ public class MyKargar {
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                         if (neighbor.getType() == CellType.SWAMP) {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 3);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
                         }
                         else {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 1);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
                         }
                     }
                 }
@@ -192,10 +194,10 @@ public class MyKargar {
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                         if (neighbor.getType() == CellType.SWAMP) {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 3);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
                         }
                         else {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 1);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
                         }
                     }
                 }
@@ -203,10 +205,10 @@ public class MyKargar {
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
                         if (neighbor.getType() == CellType.SWAMP) {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 3);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
                         }
                         else {
-                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), 1);
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
                         }
                     }
                 }
