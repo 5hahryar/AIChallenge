@@ -238,7 +238,7 @@ public class MyKargar {
         //if holding below 6 resources go for next res if no enemy is visible
         //and target is in sight
         int holdingResAmount = world.getAnt().getCurrentResource().getValue();
-        if (holdingResAmount > 6) return getDirectionToNode(world, baseGraphName);
+        if (holdingResAmount >= 5) return getDirectionToNode(world, baseGraphName);
         else if (!isEnemySarbaazInSight && !nodesWithResources.isEmpty()) {
             int[] positionXY = new int[]{positionX, positionY};
             int[] targetXY = new int[]{nodesWithResources.get(0).getX(), nodesWithResources.get(0).getY()};
