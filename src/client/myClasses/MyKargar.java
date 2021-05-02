@@ -4,6 +4,7 @@ import client.World;
 import client.bfs.AdjList;
 import client.bfs.BfsHelper;
 import client.bfs.MyNode;
+import client.dijkstra.Dijkstra;
 import client.model.Answer;
 import client.model.Ant;
 import client.model.Cell;
@@ -21,9 +22,12 @@ public class MyKargar {
     private static final int MESSAGE_VALUE_MAP = 4;
     private static final int MESSAGE_VALUE_MAPRES = 8;
     private static final int MESSAGE_VALUE_BASE = 10;
+    private static final int WEIGHT_SWAMP = 4;
+    private static final int WEIGHT_EMPTY = 1;
     private static Direction prevDirection = Direction.UP;
     private static ArrayList<MyMessage> messages = new ArrayList<>();
     private static final AdjList graph = new AdjList(5000, false);
+    private static final Dijkstra dijkstra = new Dijkstra();
 
     private int positionX;
     private int positionY;
@@ -38,6 +42,7 @@ public class MyKargar {
     private boolean isNewBorn = true;
     private int enemyBaseGraphName = -1;
     private boolean isEnemySarbaazInSight;
+    private boolean isSwampInSight;
 
     public MyKargar() { }
 
@@ -89,6 +94,7 @@ public class MyKargar {
         positionGraphName = Utils.getNodeNameFromCell(world.getAnt().getLocationCell());
         baseGraphName = Utils.getNodeNameFromCoordinates(world.getBaseX(), world.getBaseY());
         isEnemySarbaazInSight = false;
+        isSwampInSight = false;
         messages = new ArrayList<>();
         if (exploreAgent == null) {
             exploreAgent = new ExploreAgent(world, AntType.KARGAR);
@@ -123,6 +129,7 @@ public class MyKargar {
                     if (neighbor.getType() == CellType.BASE && neighbor.getXCoordinate() != baseX) {
                         enemyBaseGraphName = Utils.getNodeNameFromCell(neighbor);
                     }
+                    if (neighbor.getType() == CellType.SWAMP) isSwampInSight = true;
                     // add cell to nodes with resources
                     if (neighbor.getResource().getValue() > 0 && !nodesWithResourcesContains(Utils.getNodeNameFromCell(neighbor))) {
                         nodesWithResources.add(new MyNode(Utils.getNodeNameFromCell(neighbor), neighbor));
@@ -164,21 +171,45 @@ public class MyKargar {
                 if (relative.getXCoordinate() == upX && relative.getYCoordinate() == upY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
+                        if (neighbor.getType() == CellType.SWAMP) {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
+                        }
+                        else {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
+                        }
                     }
                 }
                 else if (relative.getXCoordinate() == doX && relative.getYCoordinate() == doY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
+                        if (neighbor.getType() == CellType.SWAMP) {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
+                        }
+                        else {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
+                        }
                     }
                 }
                 else if (relative.getXCoordinate() == riX && relative.getYCoordinate() == riY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
+                        if (neighbor.getType() == CellType.SWAMP) {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
+                        }
+                        else {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
+                        }
                     }
                 }
                 else if (relative.getXCoordinate() == leX && relative.getYCoordinate() == leY){
                     if (relative.getType() != CellType.WALL) {
                         addEdgeToGraph(Utils.getNodeNameFromCell(neighbor), Utils.getNodeNameFromCell(relative));
+                        if (neighbor.getType() == CellType.SWAMP) {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_SWAMP);
+                        }
+                        else {
+                            dijkstra.addEdge(String.valueOf(Utils.getNodeNameFromCell(neighbor)), String.valueOf(Utils.getNodeNameFromCell(relative)), WEIGHT_EMPTY);
+                        }
                     }
                 }
             }
@@ -190,7 +221,7 @@ public class MyKargar {
      * @return next direction for kargar to move
      */
     private Direction nextMoveDirectionKargar(World world) {
-        nodesWithResources = Utils.sortMap(world, nodesWithResources, graph);
+        nodesWithResources = Utils.sortMap(world, nodesWithResources, dijkstra);
 
         //if enemy based has been found, go to it
         if (enemyBaseGraphName != -1) {
@@ -207,7 +238,7 @@ public class MyKargar {
         //if holding below 6 resources go for next res if no enemy is visible
         //and target is in sight
         int holdingResAmount = world.getAnt().getCurrentResource().getValue();
-        if (holdingResAmount > 6) return getDirectionToNode(world, baseGraphName);
+        if (holdingResAmount >= 5) return getDirectionToNode(world, baseGraphName);
         else if (!isEnemySarbaazInSight && !nodesWithResources.isEmpty()) {
             int[] positionXY = new int[]{positionX, positionY};
             int[] targetXY = new int[]{nodesWithResources.get(0).getX(), nodesWithResources.get(0).getY()};
@@ -275,18 +306,29 @@ public class MyKargar {
         if (right != null) rightGraphName = Utils.getNodeNameFromCell(right);
         if (left != null) leftGraphName = Utils.getNodeNameFromCell(left);
 
-        //initialize BFS algorithm to find the shortest path
-        BfsHelper bfs = new BfsHelper(graph);
-        bfs.findShortestPath(positionGraphName, nodeName);
+        if (isSwampInSight) {
+            // use dijkstra
+            List<String> path = dijkstra.shortestPath(String.valueOf(positionGraphName), String.valueOf(nodeName));
+            if (path != null) {
+                //match the shortest path from DIJKSTRA to correct direction
+                if (up != null && upGraphName == Integer.parseInt(path.get(1))) return Direction.UP;
+                if (down != null && downGraphName == Integer.parseInt(path.get(1))) return Direction.DOWN;
+                if (right != null && rightGraphName == Integer.parseInt(path.get(1))) return Direction.RIGHT;
+                if (left != null && leftGraphName == Integer.parseInt(path.get(1))) return Direction.LEFT;
+            }
+        } else {
+            //initialize BFS algorithm to find the shortest path
+            BfsHelper bfs = new BfsHelper(graph);
+            bfs.findShortestPath(positionGraphName, nodeName);
 
-        //match the shortest path from BFS to correct direction
-        if (bfs.getPathToDestination().size() > 0) {
-            if (up != null && upGraphName == bfs.getPathToDestination().get(0)) return Direction.UP;
-            if (down != null && downGraphName == bfs.getPathToDestination().get(0)) return Direction.DOWN;
-            if (right != null && rightGraphName == bfs.getPathToDestination().get(0)) return Direction.RIGHT;
-            if (left != null && leftGraphName == bfs.getPathToDestination().get(0)) return Direction.LEFT;
+            //match the shortest path from BFS to correct direction
+            if (bfs.getPathToDestination().size() > 0) {
+                if (up != null && upGraphName == bfs.getPathToDestination().get(0)) return Direction.UP;
+                if (down != null && downGraphName == bfs.getPathToDestination().get(0)) return Direction.DOWN;
+                if (right != null && rightGraphName == bfs.getPathToDestination().get(0)) return Direction.RIGHT;
+                if (left != null && leftGraphName == bfs.getPathToDestination().get(0)) return Direction.LEFT;
+            }
         }
-
         //return center if non is matched to BFS
         return Utils.getRandomDirection();
     }
